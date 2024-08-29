@@ -1,46 +1,47 @@
 import json
 
 from telethon import TelegramClient, events
-from telethon.tl.types import InputChannel
 
-
-def get_dialog_list(client, chats):
-
-    channel_names = chats.keys()
-    channel_ids = chats.items()
-
-    channels = []
-    for dialog in client.iter_dialogs():
-        if (dialog.name in channel_names
-                or dialog.entity.id in channel_ids):
-
-            channels.append(InputChannel(
-                dialog.entity.id,
-                dialog.entity.access_hash))
-
-    return channels
+from utils.db_helpers import connect_to_mongo
+from utils.chats_helpers import (
+    get_dialog_list,
+    get_chat_name,
+    get_event_id
+    )
 
 
 def start(keys, chats):
-    client = TelegramClient(
+
+    _, collection = connect_to_mongo()
+
+    tg_client = TelegramClient(
         keys['session_name'],
         keys['api_id'],
         keys['api_hash'])
-    client.start()
+    tg_client.start()
 
-    channels = get_dialog_list(client, chats)
+    # it's somehow is used not only in print statement
+    channels = get_dialog_list(tg_client, chats)
 
     print(f'Parsing data from {len(channels)} chats.')
 
-    @client.on(events.NewMessage(chats=channels))
+    @tg_client.on(events.NewMessage(chats=list(chats.keys())))
     async def handler(event):
-        # print(type(event.message))
-        # print(type(event))
         # print(event)
-        print(event.message.date, event.message.message)
-        # print(type(event.message.date))  # datetime.datetime
+        if event.message.message != '':
+            id = get_event_id(event)
+            print(event.message.id, id)
+            document = {
+                'Message': event.message.message,
+                'Date': event.message.date,
+                'Chat_Name': get_chat_name(id),
+                'Message_ID': event.message.id,
+                }
 
-    client.run_until_disconnected()
+            response = collection.insert_one(document)
+            print(response)
+
+    tg_client.run_until_disconnected()
 
 
 if __name__ == '__main__':
