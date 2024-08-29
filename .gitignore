@@ -1,0 +1,8 @@
+# files
+*.session*
+*.ipynb
+
+# configurations
+__pycache__/
+*keys*.json
+chats*.json
