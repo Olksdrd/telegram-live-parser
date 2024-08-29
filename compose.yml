@@ -1,0 +1,18 @@
+services:
+
+  mongo:
+    image: mongo:jammy
+    restart: always
+    env_file: ./env/mongo.env
+    volumes:
+      - mongo-storage:/data/db
+
+  mongo-express:
+    image: mongo-express:1-20-alpine3.19
+    restart: always
+    ports:
+      - 8081:8081
+    env_file: ./env/mongo-express.env
+
+volumes:
+  mongo-storage:
