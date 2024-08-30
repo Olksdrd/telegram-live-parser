@@ -13,14 +13,22 @@ client, collection = connect_to_mongo()
 
 df = pd.DataFrame(list(collection.find()))
 
-register_page(__name__, name='Trend')
+register_page(
+    __name__,
+    path='/trend',
+    name='Trend',
+    title='Word Trends',
+    description='Investigate words trend over time.'
+)
 
 
 layout = html.Div([
     dcc.Input(
         id='input-field',
         type='text',
-        placeholder=''
+        placeholder='',
+        persistence=True,  # remember the choice when switching tabs
+        persistence_type='memory'  # clears after refresh
         ),
     dcc.Graph(id='graph', figure={})
 ])

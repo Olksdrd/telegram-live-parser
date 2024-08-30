@@ -10,14 +10,20 @@ from utils.db_helpers import connect_to_mongo  # noqa: E402
 client, collection = connect_to_mongo()
 
 
-register_page(__name__, path='/', name='Table')
+register_page(
+    __name__,
+    path='/',
+    name='Table',
+    title='Telegram Table',
+    description='Live table to monitor tg messages.'
+)
 
 
 layout = html.Div([
 
     html.Div(id='table', children=[]),
 
-    # activated once/week or when page refreshed
+    # activated once a week or when the page is refreshed
     dcc.Interval(id='interval', interval=86400000 * 7, n_intervals=0),
 
     html.Div(id="placeholder")
