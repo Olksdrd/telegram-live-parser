@@ -3,6 +3,7 @@ import sys
 import pandas as pd
 import plotly.graph_objs as go
 
+import dash
 from dash import register_page, html, dcc, callback, Input, Output
 
 sys.path.insert(0, os.getcwd())
@@ -36,27 +37,32 @@ layout = html.Div([
 
 @callback(
     Output('graph', 'figure'),
-    Input('input-field', 'value'))
+    Input('input-field', 'value'),
+    prevent_initial_call=True
+)
 def plot_trend(word):
-    dff = (
-        df['Message']
-        .str.contains(str(word))
-        .groupby(df['Date'].dt.floor('10min'))
-        .agg(['sum'])
-        # .count()
-        .reset_index()
-    )
+    if word:
+        dff = (
+            df['Message']
+            .str.contains(str(word), case=False)
+            .groupby(df['Date'].dt.floor('10min'))
+            .agg(['sum'])
+            .reset_index()
+        )
 
-    fig = go.Figure(
-        data=go.Scatter(x=dff['Date'],
-                        y=dff['sum'],
-                        marker_color='indianred',
-                        text="counts"
-                        ))
-    fig.update_layout({
-        "title": 'Counts per time',
-        "xaxis": {"title": "Time"},
-        "yaxis": {"title": "Count"},
-        "showlegend": False})
+        fig = go.Figure(
+            data=go.Scatter(x=dff['Date'],
+                            y=dff['sum'],
+                            marker_color='indianred',
+                            text="counts"
+                            ))
+        fig.update_layout({
+            "title": 'Counts per time',
+            "xaxis": {"title": "Time"},
+            "yaxis": {"title": "Count"},
+            "showlegend": False})
 
-    return fig
+        return fig
+
+    elif not word:
+        raise dash.exceptions.PreventUpdate
