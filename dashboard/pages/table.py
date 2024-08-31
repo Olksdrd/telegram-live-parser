@@ -25,7 +25,8 @@ layout = html.Div([
 @callback(
     Output('table', 'children'),
     Input('data-store', 'data'),
-    prevent_initial_call=True)
+    prevent_initial_call=False
+)
 def get_data(data):
 
     columns = [
@@ -50,5 +51,6 @@ def get_data(data):
             page_size=12,
             style_cell={'textAlign': 'left', 'minWidth': '100px',
                         'width': '100px', 'maxWidth': '100px'},
+            persistence=False
         )
     ]

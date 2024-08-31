@@ -45,7 +45,20 @@ tabbar = dbc.Nav(
 
 app.layout = dbc.Container([
     dbc.Row([
-        dbc.Col(tabbar)
+        dbc.Col(
+            tabbar,
+            width={"size": 2, "offset": 0}
+        ),
+
+        dbc.Col(
+            dbc.Button(
+                'Refresh',
+                id='refresh-button',
+                n_clicks=0,
+                className='ms-2'
+            ),
+            width={"size": 1, "offset": 0}
+        )
     ]),
 
     html.Br(),
@@ -54,8 +67,6 @@ app.layout = dbc.Container([
         dbc.Col(page_container)
     ]),
 
-    # activated once a week or when the page is refreshed
-    dcc.Interval(id='interval', interval=86400000 * 7, n_intervals=0),
 
     dcc.Store(id='data-store', data=[], storage_type='memory')
 
@@ -64,8 +75,8 @@ app.layout = dbc.Container([
 
 @callback(
     Output('data-store', 'data'),
-    Input('interval', 'n_intervals'))
-def get_data(n_intervals):
+    Input('refresh-button', 'n_clicks'))
+def get_data(n_clicks):
     print('Getting data from database')
 
     df = (

@@ -19,6 +19,7 @@ layout = html.Div([
         id='input-field',
         type='text',
         placeholder='',
+        debounce=True,
         persistence=True,  # remember the choice when switching tabs
         persistence_type='memory'  # clears after refresh
         ),
@@ -30,7 +31,7 @@ layout = html.Div([
     Output('graph', 'figure'),
     Input('input-field', 'value'),
     Input('data-store', 'data'),
-    prevent_initial_call=True
+    prevent_initial_call=False
 )
 def plot_trend(word, data):
     if word:
