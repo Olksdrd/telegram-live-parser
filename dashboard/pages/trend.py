@@ -1,18 +1,9 @@
-import os
-import sys
 import pandas as pd
 import plotly.graph_objs as go
 
 import dash
 from dash import register_page, html, dcc, callback, Input, Output
 
-sys.path.insert(0, os.getcwd())
-from utils.db_helpers import connect_to_mongo  # noqa: E402
-
-
-client, collection = connect_to_mongo()
-
-df = pd.DataFrame(list(collection.find()))
 
 register_page(
     __name__,
@@ -38,10 +29,18 @@ layout = html.Div([
 @callback(
     Output('graph', 'figure'),
     Input('input-field', 'value'),
+    Input('data-store', 'data'),
     prevent_initial_call=True
 )
-def plot_trend(word):
+def plot_trend(word, data):
     if word:
+        df = pd.DataFrame(
+            data,
+            columns=['Message', 'Date', 'Chat_Name', 'Message_ID']
+        )
+
+        df['Date'] = pd.to_datetime(df['Date'])
+
         dff = (
             df['Message']
             .str.contains(str(word), case=False)

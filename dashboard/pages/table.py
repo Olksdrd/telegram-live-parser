@@ -1,13 +1,4 @@
-import os
-import sys
-import pandas as pd
 from dash import register_page, dcc, html, Input, Output, dash_table, callback
-
-sys.path.insert(0, os.getcwd())
-from utils.db_helpers import connect_to_mongo  # noqa: E402
-
-
-client, collection = connect_to_mongo()
 
 
 register_page(
@@ -33,25 +24,22 @@ layout = html.Div([
 
 @callback(
     Output('table', 'children'),
-    Input('interval', 'n_intervals'))
-def get_data(n_intervals):
-    # print(n_intervals)
+    Input('data-store', 'data'),
+    prevent_initial_call=True)
+def get_data(data):
 
-    df = (
-        pd.DataFrame(list(collection.find()))
-        .drop('_id', axis=1)
-        .sort_values(by='Date', ascending=False)
-        # [['Message', 'Date', 'Chat_Name', 'Message_ID']]
-    )
+    columns = [
+        {'name': 'Message', 'id': 'Message'},
+        {'name': 'Date', 'id': 'Date'},
+        {'name': 'Chat_Name', 'id': 'Chat_Name'},
+        {'name': 'Message_ID', 'id': 'Message_ID'},
+    ]
 
     return [
         dash_table.DataTable(
             id='my-table',
-            columns=[{
-                'name': col,
-                'id': col,
-            } for col in df.columns],
-            data=df.to_dict('records'),
+            columns=columns,
+            data=data,
             editable=False,
             row_deletable=True,
             filter_action="native",
