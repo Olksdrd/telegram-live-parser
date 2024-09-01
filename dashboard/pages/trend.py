@@ -54,13 +54,13 @@ def plot_trend(word, data):
             data=go.Scatter(x=dff['Date'],
                             y=dff['sum'],
                             marker_color='indianred',
-                            text="counts"
+                            text='counts'
                             ))
         fig.update_layout({
-            "title": 'Counts per time',
-            "xaxis": {"title": "Time"},
-            "yaxis": {"title": "Count"},
-            "showlegend": False})
+            'title': 'Counts per time',
+            'xaxis': {'title': 'Time'},
+            'yaxis': {'title': 'Count'},
+            'showlegend': False})
 
         return fig
 

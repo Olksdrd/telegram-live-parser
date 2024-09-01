@@ -30,24 +30,24 @@ tabbar = dbc.Nav(
             [
                 dbc.NavLink(
                     [
-                        html.Div(page["name"], className="ms-2"),
+                        html.Div(page['name'], className='ms-2'),
                     ],
-                    href=page["path"],
-                    active="exact",
+                    href=page['path'],
+                    active='exact',
                 )
                 for page in page_registry.values()
             ],
             # vertical=False,
             horizontal='start',
             pills=True,
-            className="bg-light",
+            className='bg-light',
 )
 
 app.layout = dbc.Container([
     dbc.Row([
         dbc.Col(
             tabbar,
-            width={"size": 2, "offset": 0}
+            width={'size': 2, 'offset': 0}
         ),
 
         dbc.Col(
@@ -55,9 +55,10 @@ app.layout = dbc.Container([
                 'Refresh',
                 id='refresh-button',
                 n_clicks=0,
-                className='ms-2'
+                className='ms-2',
+                # active=True
             ),
-            width={"size": 1, "offset": 0}
+            width={'size': 1, 'offset': 0}
         )
     ]),
 
@@ -68,14 +69,20 @@ app.layout = dbc.Container([
     ]),
 
 
-    dcc.Store(id='data-store', data=[], storage_type='memory')
+    dcc.Store(
+        id='data-store',
+        data=None,
+        storage_type='memory',
+        clear_data=True  # ?
+    )
 
 ], fluid=True)
 
 
 @callback(
     Output('data-store', 'data'),
-    Input('refresh-button', 'n_clicks'))
+    Input('refresh-button', 'n_clicks'),
+)
 def get_data(n_clicks):
     print('Getting data from database')
 
@@ -89,7 +96,7 @@ def get_data(n_clicks):
     return df.to_dict('records')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(
         host='127.0.0.1',
         port='8050',
