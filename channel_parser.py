@@ -3,11 +3,7 @@ import json
 from telethon import TelegramClient, events
 
 from utils.db_helpers import connect_to_mongo
-from utils.chats_helpers import (
-    get_dialog_list,
-    get_chat_name,
-    get_event_id
-    )
+from utils.chats_helpers import get_chat_name, get_event_id
 
 
 def start(keys, chats):
@@ -20,21 +16,18 @@ def start(keys, chats):
         keys['api_hash'])
     tg_client.start()
 
-    # it's somehow is used not only in print statement
-    channels = get_dialog_list(tg_client, chats)
+    print(f'Parsing data from {len(chats)} chats.')
 
-    print(f'Parsing data from {len(channels)} chats.')
-
-    @tg_client.on(events.NewMessage(chats=list(chats.keys())))
+    @tg_client.on(events.NewMessage(chats=list(chats.values())))
     async def handler(event):
         # print(event)
         if event.message.message != '':
-            id = get_event_id(event)
-            print(event.message.id, id)
+            chat_id = get_event_id(event)
+            print(event.message.id, chat_id)
             document = {
                 'Message': event.message.message,
                 'Date': event.message.date,
-                'Chat_Name': get_chat_name(id),
+                'Chat_Name': get_chat_name(chat_id),
                 'Message_ID': event.message.id,
                 }
 
