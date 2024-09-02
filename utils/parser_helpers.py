@@ -1,7 +1,12 @@
+import os
+from pathlib import Path
 import json
 import pytz
 
 from telethon.tl.types import InputChannel, PeerChannel, PeerUser, PeerChat
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=Path('./env/config.env'))
 
 
 def get_dialog_list(client, chats):
@@ -22,7 +27,8 @@ def get_dialog_list(client, chats):
 
 
 def _load_chats_dict():
-    with open('./utils/chats_to_parse.json', 'r', encoding='utf-16') as f:
+    with open(os.environ.get('CHANNEL_LIST_FILE'), 'r',
+              encoding='utf-16') as f:
         chats = json.load(f)
 
     names_dict = {val: key for key, val in chats.items()}

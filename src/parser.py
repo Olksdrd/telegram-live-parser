@@ -1,8 +1,11 @@
 import os
 import sys
+from pathlib import Path
 import logging
 import json
 import asyncio
+
+from dotenv import load_dotenv
 
 from telethon import TelegramClient, events
 
@@ -12,15 +15,19 @@ import utils.parser_helpers as parser  # noqa: E402
 
 
 def configure():
+
+    load_dotenv(dotenv_path=Path('./env/config.env'))
+
     logging.basicConfig(
         level=logging.INFO,
         format='%(asctime)s [%(levelname)s]: %(message)s'
     )
 
-    with open('./tg-keys.json', 'r') as f:
+    with open(os.environ.get('TG_KEYS_FILE'), 'r') as f:
         keys = json.load(f)
 
-    with open('./utils/chats_to_parse.json', 'r', encoding='utf-16') as f:
+    with open(os.environ.get('CHANNEL_LIST_FILE'), 'r',
+              encoding='utf-16') as f:
         chats = json.load(f)
 
     return keys, chats

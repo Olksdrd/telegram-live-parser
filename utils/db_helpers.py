@@ -5,7 +5,7 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 
 
-load_dotenv(dotenv_path=Path("./env/db.env"))
+load_dotenv(dotenv_path=Path('./env/config.env'))
 
 
 def connect_to_db(user, passwd, ip, port):
@@ -23,9 +23,9 @@ def get_db_collection(client, table_name, collection_name):
 def connect_to_mongo():
     mongo_client = connect_to_db(
         user=str(os.environ.get('DB_USER')),
-        passwd=str(os.environ.get('PASSWD')),
-        ip=os.environ.get('IP'),
-        port=os.environ.get('PORT')
+        passwd=str(os.environ.get('DB_PASSWD')),
+        ip=os.environ.get('DB_IP'),
+        port=os.environ.get('DB_PORT')
     )
 
     collection = get_db_collection(
