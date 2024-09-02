@@ -16,14 +16,20 @@ def get_dialog_list(client, chats):
             chats.append(InputChannel(
                 dialog.entity.id,
                 dialog.entity.access_hash))
-    print(len(chats))
+
     return chats
 
 
-with open('./utils/chats_to_parse.json', 'r', encoding='utf-16') as f:
-    chats = json.load(f)
+def _load_chats_dict():
+    with open('./utils/chats_to_parse.json', 'r', encoding='utf-16') as f:
+        chats = json.load(f)
 
-names_dict = {val: key for key, val in chats.items()}
+    names_dict = {val: key for key, val in chats.items()}
+
+    return names_dict
+
+
+names_dict = _load_chats_dict()
 
 
 def get_chat_name(id):

@@ -1,23 +1,28 @@
+import os
+import sys
 import logging
 import json
 
 from telethon import TelegramClient, events
 
-from utils.db_helpers import connect_to_mongo
-from utils.chats_helpers import get_chat_name, get_event_id
+sys.path.insert(0, os.getcwd())
+import utils.db_helpers as db  # noqa: E402
+import utils.parser_helpers as parser  # noqa: E402
 
 
 def start(keys, chats):
 
     logging.info('Connecting to database...')
-    _, collection = connect_to_mongo()
+    _, collection = db.connect_to_mongo()
     logging.info('Connection established.')
 
     logging.info('Initializing Telegram Client...')
     tg_client = TelegramClient(
         keys['session_name'],
         keys['api_id'],
-        keys['api_hash'])
+        keys['api_hash'],
+        catch_up=True
+    )
     tg_client.start()
     logging.info('Telegram Client started.')
 
@@ -27,8 +32,8 @@ def start(keys, chats):
     async def handler(event):
 
         if event.message.message != '':  # parse only messages with text
-            chat_id = get_event_id(event)
-            chat_name = get_chat_name(chat_id)
+            chat_id = parser.get_event_id(event)
+            chat_name = parser.get_chat_name(chat_id)
 
             document = {
                 'Message': event.message.message,
@@ -53,7 +58,7 @@ if __name__ == '__main__':
         format='%(asctime)s [%(levelname)s]: %(message)s'
     )
 
-    with open('tg-keys.json', 'r') as f:
+    with open('./tg-keys.json', 'r') as f:
         keys = json.load(f)
 
     with open('./utils/chats_to_parse.json', 'r', encoding='utf-16') as f:
