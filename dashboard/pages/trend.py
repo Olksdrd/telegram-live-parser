@@ -18,11 +18,16 @@ layout = html.Div([
     dcc.Input(
         id='input-field',
         type='text',
-        placeholder='',
-        debounce=True,
+        placeholder='enter text...',
+        debounce=True,  # press enter or click elsewhere to finish
         persistence=True,  # remember the choice when switching tabs
-        persistence_type='memory'  # clears after refresh
-        ),
+        persistence_type='memory',  # clears after refresh
+        minLength=1,
+        required=False,
+        size='20',  # number of visible characters -> regulate box size
+        autoFocus=True,
+    ),
+
     dcc.Graph(id='graph', figure={})
 ])
 

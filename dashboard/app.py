@@ -17,7 +17,7 @@ client, collection = connect_to_mongo()
 app = Dash(
     __name__,
     use_pages=True,
-    external_stylesheets=[dbc.themes.SPACELAB],
+    external_stylesheets=[dbc.themes.BOOTSTRAP, dbc.icons.BOOTSTRAP],
     suppress_callback_exceptions=True,
     meta_tags=[{
         'name': 'viewport',
@@ -30,7 +30,7 @@ tabbar = dbc.Nav(
             [
                 dbc.NavLink(
                     [
-                        html.Div(page['name'], className='ms-2'),
+                        html.Div(page['name'], className='me-1'),
                     ],
                     href=page['path'],
                     active='exact',
@@ -52,13 +52,15 @@ app.layout = dbc.Container([
 
         dbc.Col(
             dbc.Button(
-                'Refresh',
+                [html.I(className='bi bi-arrow-clockwise me-2'), 'Refresh'],
                 id='refresh-button',
                 n_clicks=0,
                 className='ms-2',
+                color='primary',
+                outline=True,
                 # active=True
             ),
-            width={'size': 1, 'offset': 0}
+            width={'size': 2, 'offset': 0}
         )
     ]),
 
