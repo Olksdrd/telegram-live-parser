@@ -1,4 +1,5 @@
 import json
+import pytz
 
 from telethon.tl.types import InputChannel, PeerChannel, PeerUser, PeerChat
 
@@ -34,6 +35,12 @@ names_dict = _load_chats_dict()
 
 def get_chat_name(id):
     return names_dict[id]
+
+
+def change_timezone(timestamp, timezone='Europe/Kyiv'):
+    tz = pytz.timezone(timezone)
+
+    return timestamp.astimezone(tz)
 
 
 def get_event_id(event):
