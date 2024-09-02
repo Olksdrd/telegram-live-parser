@@ -11,11 +11,22 @@ import utils.db_helpers as db  # noqa: E402
 import utils.parser_helpers as parser  # noqa: E402
 
 
-async def start(keys, chats):
+def configure():
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s [%(levelname)s]: %(message)s'
+    )
 
-    logging.info('Connecting to database...')
-    _, collection = db.connect_to_mongo()
-    logging.info('Connection established.')
+    with open('./tg-keys.json', 'r') as f:
+        keys = json.load(f)
+
+    with open('./utils/chats_to_parse.json', 'r', encoding='utf-16') as f:
+        chats = json.load(f)
+
+    return keys, chats
+
+
+async def start(keys, chats):
 
     logging.info('Initializing Telegram Client...')
     tg_client = TelegramClient(
@@ -54,19 +65,16 @@ async def start(keys, chats):
 
 
 if __name__ == '__main__':
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s [%(levelname)s]: %(message)s'
-    )
 
-    with open('./tg-keys.json', 'r') as f:
-        keys = json.load(f)
+    keys, chats = configure()
 
-    with open('./utils/chats_to_parse.json', 'r', encoding='utf-16') as f:
-        chats = json.load(f)
+    logging.info('Connecting to database...')
+    db_client, collection = db.connect_to_mongo()
+    logging.info('Connection established.')
 
     # handle SIGINT without an error message from asyncio
     try:
         asyncio.run(start(keys, chats))
     except KeyboardInterrupt:
-        pass
+        db_client.close()
+        pass  # TelegramClient connection autocloses on SIGINT
