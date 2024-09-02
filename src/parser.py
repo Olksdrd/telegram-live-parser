@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 import json
+import asyncio
 
 from telethon import TelegramClient, events
 
@@ -10,7 +11,7 @@ import utils.db_helpers as db  # noqa: E402
 import utils.parser_helpers as parser  # noqa: E402
 
 
-def start(keys, chats):
+async def start(keys, chats):
 
     logging.info('Connecting to database...')
     _, collection = db.connect_to_mongo()
@@ -23,7 +24,7 @@ def start(keys, chats):
         keys['api_hash'],
         catch_up=True
     )
-    tg_client.start()
+    await tg_client.start()
     logging.info('Telegram Client started.')
 
     logging.info(f'Parsing data from {len(chats)} chats...')
@@ -49,7 +50,7 @@ def start(keys, chats):
                 f'Record ID: {response.inserted_id}.'
             )
 
-    tg_client.run_until_disconnected()
+    await tg_client.run_until_disconnected()
 
 
 if __name__ == '__main__':
@@ -64,4 +65,8 @@ if __name__ == '__main__':
     with open('./utils/chats_to_parse.json', 'r', encoding='utf-16') as f:
         chats = json.load(f)
 
-    start(keys, chats)
+    # handle SIGINT without an error message from asyncio
+    try:
+        asyncio.run(start(keys, chats))
+    except KeyboardInterrupt:
+        pass
