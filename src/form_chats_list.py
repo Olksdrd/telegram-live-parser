@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from telethon import TelegramClient
 
 
-def configure():
+def configure() -> dict[str, int]:
     load_dotenv(dotenv_path=Path("./env/config.env"))
 
     with open(os.getenv('TG_KEYS_FILE'), 'r') as f:
@@ -16,12 +16,12 @@ def configure():
     return keys
 
 
-def get_all_dialogs(client):
+def get_all_dialogs(client: TelegramClient) -> dict[str, int]:
     return {dialog.name: dialog.entity.id
             for dialog in client.iter_dialogs()}
 
 
-def main():
+def main() -> None:
     keys = configure()
 
     client = TelegramClient(

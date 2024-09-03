@@ -1,15 +1,21 @@
 import os
 from pathlib import Path
+from datetime import datetime
 import json
 import pytz
 
+from telethon import TelegramClient
 from telethon.tl.types import InputChannel, PeerChannel, PeerUser, PeerChat
+from telethon.events import NewMessage
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=Path('./env/config.env'))
 
 
-def get_dialog_list(client, chats):
+def get_dialog_list(
+    client: TelegramClient,
+    chats: dict[str, int]
+) -> list[int]:
     # no longer in use since it parsed only channels but not chats
     # TODO: further investigate this approach
     chat_names = chats.keys()
@@ -27,7 +33,7 @@ def get_dialog_list(client, chats):
     return dialog_list
 
 
-def _load_chats_dict():
+def _load_chats_dict() -> dict[int, str]:
     with open(os.getenv('CHANNEL_LIST_FILE'), 'r', encoding='utf-16') as f:
         chats = json.load(f)
 
@@ -39,17 +45,20 @@ def _load_chats_dict():
 names_dict = _load_chats_dict()
 
 
-def get_chat_name(chat_id):
+def get_chat_name(chat_id: int) -> str:
     return names_dict.get(chat_id, 'Anonymous?')
 
 
-def change_timezone(timestamp, timezone='Europe/Kyiv'):
+def change_timezone(
+    timestamp: datetime,
+    timezone: str = 'Europe/Kyiv'
+) -> str:
     tz = pytz.timezone(timezone)
 
     return timestamp.astimezone(tz)  # .isoformat()
 
 
-def get_dialog_id(event):
+def get_dialog_id(event: NewMessage.Event) -> int:
     peer_id = event.message.peer_id
     if isinstance(peer_id, PeerChannel):
         return peer_id.channel_id

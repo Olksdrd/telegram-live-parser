@@ -14,7 +14,7 @@ import utils.db_helpers as db  # noqa: E402
 import utils.parser_helpers as parser  # noqa: E402
 
 
-def configure():
+def configure() -> tuple[dict[str, int], list[int]]:
 
     load_dotenv(dotenv_path=Path('./env/config.env'))
 
@@ -28,12 +28,16 @@ def configure():
 
     with open(os.getenv('CHANNEL_LIST_FILE'), 'r', encoding='utf-16') as f:
         chats = json.load(f)
-    chat_ids_list = list(chats.values())
+    chat_ids = list(chats.values())
 
-    return keys, chat_ids_list
+    return keys, chat_ids
 
 
-async def start(keys, chat_ids_list, collection):
+async def start(
+    keys: dict[str, int],
+    chat_ids: list[int],
+    collection: db.Collection
+) -> None:
 
     logging.info('Initializing Telegram Client...')
     tg_client = TelegramClient(
@@ -45,10 +49,10 @@ async def start(keys, chat_ids_list, collection):
     await tg_client.start()
     logging.info('Telegram Client started.')
 
-    logging.info(f'Parsing data from {len(chat_ids_list)} chats...')
+    logging.info(f'Parsing data from {len(chat_ids)} chats...')
 
     @tg_client.on(events.NewMessage(
-        chats=chat_ids_list,
+        chats=chat_ids,
         # commented out so that both incoming and outgoing messages are parsed
         # useful for testing: just send some message to yourself
         # incoming=True
@@ -78,7 +82,7 @@ async def start(keys, chat_ids_list, collection):
     await tg_client.run_until_disconnected()
 
 
-def main():
+def main() -> None:
 
     keys, chats = configure()
 
