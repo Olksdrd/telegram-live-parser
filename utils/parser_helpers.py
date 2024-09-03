@@ -10,25 +10,25 @@ load_dotenv(dotenv_path=Path('./env/config.env'))
 
 
 def get_dialog_list(client, chats):
-
+    # no longer in use since it parsed only channels but not chats
+    # TODO: further investigate this approach
     chat_names = chats.keys()
     chat_ids = chats.items()
 
-    chats = []
+    dialog_list = []
     for dialog in client.iter_dialogs():
         if (dialog.name in chat_names
                 or dialog.entity.id in chat_ids):
 
-            chats.append(InputChannel(
+            dialog_list.append(InputChannel(
                 dialog.entity.id,
                 dialog.entity.access_hash))
 
-    return chats
+    return dialog_list
 
 
 def _load_chats_dict():
-    with open(os.environ.get('CHANNEL_LIST_FILE'), 'r',
-              encoding='utf-16') as f:
+    with open(os.getenv('CHANNEL_LIST_FILE'), 'r', encoding='utf-16') as f:
         chats = json.load(f)
 
     names_dict = {val: key for key, val in chats.items()}
@@ -39,23 +39,25 @@ def _load_chats_dict():
 names_dict = _load_chats_dict()
 
 
-def get_chat_name(id):
-    return names_dict[id]
+def get_chat_name(chat_id):
+    return names_dict.get(chat_id, 'Anonymous?')
 
 
 def change_timezone(timestamp, timezone='Europe/Kyiv'):
     tz = pytz.timezone(timezone)
 
-    return timestamp.astimezone(tz)
+    return timestamp.astimezone(tz)  # .isoformat()
 
 
-def get_event_id(event):
+def get_dialog_id(event):
     peer_id = event.message.peer_id
     if isinstance(peer_id, PeerChannel):
-        return event.message.peer_id.channel_id
+        return peer_id.channel_id
     elif isinstance(peer_id, PeerUser):
-        return event.message.peer_id.user_id
+        return peer_id.user_id
     elif isinstance(peer_id, PeerChat):
-        return event.message.peer_id.chat_id
+        return peer_id.chat_id
     else:
-        raise Exception('Anonymous message?')
+        print('Anomymous message?')
+        print(event)  # never seen them before
+        return -1

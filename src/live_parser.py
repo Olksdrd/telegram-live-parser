@@ -23,43 +23,50 @@ def configure():
         format='%(asctime)s [%(levelname)s]: %(message)s'
     )
 
-    with open(os.environ.get('TG_KEYS_FILE'), 'r') as f:
+    with open(os.getenv('TG_KEYS_FILE'), 'r') as f:
         keys = json.load(f)
 
-    with open(os.environ.get('CHANNEL_LIST_FILE'), 'r',
-              encoding='utf-16') as f:
+    with open(os.getenv('CHANNEL_LIST_FILE'), 'r', encoding='utf-16') as f:
         chats = json.load(f)
+    chat_ids_list = list(chats.values())
 
-    return keys, chats
+    return keys, chat_ids_list
 
 
-async def start(keys, chats):
+async def start(keys, chat_ids_list, collection):
 
     logging.info('Initializing Telegram Client...')
     tg_client = TelegramClient(
         keys['session_name'],
         keys['api_id'],
         keys['api_hash'],
-        catch_up=True
+        catch_up=True  # does catchup even work?
     )
     await tg_client.start()
     logging.info('Telegram Client started.')
 
-    logging.info(f'Parsing data from {len(chats)} chats...')
+    logging.info(f'Parsing data from {len(chat_ids_list)} chats...')
 
-    @tg_client.on(events.NewMessage(chats=list(chats.values())))
+    @tg_client.on(events.NewMessage(
+        chats=chat_ids_list,
+        # commented out so that both incoming and outgoing messages are parsed
+        # useful for testing: just send some message to yourself
+        # incoming=True
+        ))
     async def handler(event):
-
-        if event.message.message != '':  # parse only messages with text
-            chat_id = parser.get_event_id(event)
+        # parse only messages with text, though images may also be of interest
+        if event.message.message != '':  # tbh messages with len 1 are useless
+            chat_id = parser.get_dialog_id(event)
             chat_name = parser.get_chat_name(chat_id)
 
             document = {
                 'Message': event.message.message,
-                'Date': event.message.date,
+                'Date': parser.change_timezone(event.message.date),
                 'Chat_Name': chat_name,
                 'Message_ID': event.message.id,
+                # TODO: investigate other attributes in more details
             }
+            # note that chat_id + Message_ID should provide unique primary key
 
             response = collection.insert_one(document)
             logging.info(
@@ -71,7 +78,7 @@ async def start(keys, chats):
     await tg_client.run_until_disconnected()
 
 
-if __name__ == '__main__':
+def main():
 
     keys, chats = configure()
 
@@ -81,7 +88,11 @@ if __name__ == '__main__':
 
     # handle SIGINT without an error message from asyncio
     try:
-        asyncio.run(start(keys, chats))
+        asyncio.run(start(keys, chats, collection))
     except KeyboardInterrupt:
         db_client.close()
         pass  # TelegramClient connection autocloses on SIGINT
+
+
+if __name__ == '__main__':
+    main()
