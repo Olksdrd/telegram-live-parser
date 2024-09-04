@@ -2,17 +2,49 @@ services:
 
   mongo:
     image: mongo:jammy
+    container_name: mongo
     restart: always
     env_file: ./env/mongo.env
     volumes:
       - mongo-storage:/data/db
+    networks:
+      - parser
 
   mongo-express:
     image: mongo-express:1-20-alpine3.19
+    container_name: mongo-express
     restart: always
     ports:
       - 8081:8081
     env_file: ./env/mongo-express.env
+    networks:
+      - parser
+    depends_on:
+      - mongo
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: ./dashboard/DashboardDockerfile
+    container_name: dashboard
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - "no-new-privileges=true"
+    restart: always
+    ports:
+      - 8050:8050
+    networks:
+      - parser
+    depends_on:
+      - mongo
 
 volumes:
   mongo-storage:
+
+networks:
+  parser:
+    name: parser
+    driver: bridge
+    external: false

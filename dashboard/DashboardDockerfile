@@ -1,0 +1,33 @@
+FROM python:3.12.5-slim-bookworm
+
+ARG USERNAME=docker
+ARG USER_ID=1000
+ARG GROUP_ID=1000
+
+WORKDIR /home/$USERNAME
+
+COPY ./dashboard/requirements.txt ./
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY dashboard .
+COPY utils ./utils
+
+RUN : \
+    && addgroup --gid $GROUP_ID $USERNAME \
+    && adduser --disabled-password --gecos '' --uid $USER_ID --gid $GROUP_ID $USERNAME \
+    && chown -R $USER_ID:$GROUP_ID . \
+    && chsh -s /usr/sbin/nologin root \
+    && :
+
+USER $USERNAME
+
+
+ENV DB_USER=root
+ENV DB_PASSWD=example
+ENV DB_IP=mongo
+ENV DB_PORT=27017
+ENV TABLE_NAME=messages
+ENV COLLECTION_NAME=test_sample2
+
+CMD [ "python", "app.py" ]
