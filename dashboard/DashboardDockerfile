@@ -22,7 +22,7 @@ RUN : \
 
 USER $USERNAME
 
-
+# move to secrets in compose
 ENV DB_USER=root
 ENV DB_PASSWD=example
 ENV DB_IP=mongo

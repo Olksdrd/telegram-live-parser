@@ -65,6 +65,8 @@ async def start(
 
             document = {
                 'Message': event.message.message,
+                # mongoDB converts time back to UTC :(
+                # ! passing str here will break dashboard
                 'Date': parser.change_timezone(event.message.date),
                 'Chat_Name': chat_name,
                 'Message_ID': event.message.id,
@@ -88,6 +90,7 @@ def main() -> None:
 
     logging.info('Connecting to database...')
     db_client, collection = db.connect_to_mongo()
+    # actually it says this even if it didn't connect :)
     logging.info('Connection established.')
 
     # handle SIGINT without an error message from asyncio

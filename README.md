@@ -2,6 +2,9 @@
 
 Live parser for channels and chats to which you're subscribed to on Telegram.
 
+> [!NOTE]
+> Project is under development!
+
 # Project Structure
 
 ```
@@ -9,9 +12,11 @@ Live parser for channels and chats to which you're subscribed to on Telegram.
 ├── compose.yml
 ├── dashboard
 │   ├── app.py
-│   └── pages
-│       ├── table.py
-│       └── trend.py
+│   ├── DashboardDockerfile
+│   ├── pages
+│   │   ├── table.py
+│   │   └── trend.py
+│   └── requirements.txt
 ├── env
 │   ├── config.env
 │   ├── mongo.env
@@ -20,7 +25,7 @@ Live parser for channels and chats to which you're subscribed to on Telegram.
 ├── requirements.txt
 ├── src
 │   ├── form_chats_list.py
-│   └── parser.py
+│   └── live_parser.py
 ├── tg-keys.json
 └── utils
     ├── chats_to_parse.json
@@ -55,7 +60,7 @@ ME_CONFIG_BASICAUTH=false
 ```
 2. Launch the mongoDB with `docker compose up -d mongo`.
 
-(Optional) Or `docker compose up -d` if you also want mongo-express UI.
+(Optional) Or `docker compose up -d mongo mongo-express` if you also want mongo-express UI.
 
 ### Configure Parser
 
@@ -80,10 +85,17 @@ CHANNEL_LIST_FILE=./utils/chats_to_parse.json
     "session_name": "parser",
 }
 ```
-4. Run `python src/form_chats_list.py` to auto generate a list with IDs of *all* the channels and chats that you are subscribed to. During this first connection attempt you'll be asked to enter a confirmation code. It will be saved in the `<session_name>.session` file and as long as that file persists you shouldn't be prompted to enter the code again (at least I hope so).
+4. Run `python src/form_chats_list.py` to auto generate a list with IDs of *all* the channels and chats that you are subscribed to.
+- (optional) before running the script, create a chat with yourself. Then it will be much easier to test the script and database connection.
+- During this first connection attempt you'll be asked to enter a confirmation code.
+- Authentication will be saved in the `<session_name>.session` file and as long as that file persists you shouldn't be prompted to enter the code again (at least I hope so).
+- You can also login with bot token (`tg_client.start(bot_token=)`), but iterating over dialogs don't work with it. I think you can still use bot token in the parser itself (step 6), but at this point there is no benefit.
+- Maybe try disabling 2FA and login with you phone and password directly to avoid confirmation code on first login `tg_client.start(phone=, password=)`.
 5. If you don't want to parse all of you subscriptions, just delete corresponding chats from `./utils/chats_to_parse.json`.
-6. Launch the parser `python src/parser.py`
+6. Launch the parser `python src/live_parser.py`. It will use already existing session file to login without confirmation code.
 
 ### Dashboard
 
-Launch a dashboard by running `python dashboard/app.py`.
+(Optional) Launch a dashboard by running `docker compose up -d dashboard` and then go to http://localhost:8050/.
+
+(Check that env variables in dockerfile are correct)

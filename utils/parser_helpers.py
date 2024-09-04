@@ -52,9 +52,10 @@ def get_chat_name(chat_id: int) -> str:
 def change_timezone(
     timestamp: datetime,
     timezone: str = 'Europe/Kyiv'
-) -> str:
+) -> datetime:  # str
     tz = pytz.timezone(timezone)
 
+    # return isoformat str for DynamoDB
     return timestamp.astimezone(tz)  # .isoformat()
 
 
