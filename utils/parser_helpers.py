@@ -5,8 +5,9 @@ import json
 import pytz
 
 from telethon import TelegramClient
-from telethon.tl.types import InputChannel, PeerChannel, PeerUser, PeerChat
+from telethon.tl.types import InputChannel
 from telethon.events import NewMessage
+from telethon.utils import resolve_id
 from dotenv import load_dotenv
 
 load_dotenv(dotenv_path=Path('./env/config.env'))
@@ -16,7 +17,7 @@ def get_dialog_list(
     client: TelegramClient,
     chats: dict[str, int]
 ) -> list[int]:
-    # no longer in use since it parsed only channels but not chats
+    # ! no longer in use since it parsed only channels but not chats
     # TODO: further investigate this approach
     chat_names = chats.keys()
     chat_ids = chats.items()
@@ -45,7 +46,7 @@ def _load_chats_dict() -> dict[int, str]:
 names_dict = _load_chats_dict()
 
 
-def get_chat_name(chat_id: int) -> str:
+def get_chat_name(chat_id: int) -> str:  # TODO add all dependencies
     return names_dict.get(chat_id, 'Anonymous?')
 
 
@@ -60,14 +61,4 @@ def change_timezone(
 
 
 def get_dialog_id(event: NewMessage.Event) -> int:
-    peer_id = event.message.peer_id
-    if isinstance(peer_id, PeerChannel):
-        return peer_id.channel_id
-    elif isinstance(peer_id, PeerUser):
-        return peer_id.user_id
-    elif isinstance(peer_id, PeerChat):
-        return peer_id.chat_id
-    else:
-        print('Anomymous message?')
-        print(event)  # never seen them before
-        return -1
+    return resolve_id(event.message.chat_id)[0]
