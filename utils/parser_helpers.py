@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 from datetime import datetime
+from dataclasses import dataclass
+from typing import Self
 import json
 import pytz
 
@@ -62,3 +64,30 @@ def change_timezone(
 
 def get_dialog_id(event: NewMessage.Event) -> int:
     return resolve_id(event.message.chat_id)[0]
+
+
+@dataclass(frozen=True)
+class CompactMessage:
+    """
+    More compact representation of a message.
+    Only stores the attributes we actually need.
+    """
+    msg_id: int
+    chat_id: int
+    chat_name: str
+    msg: str
+    date: datetime
+    # TODO: investigate other attributes in more details
+    # forward: Optional[Chat] or just id
+    # note that chat_id + msg_id should provide unique primary key
+
+    @classmethod
+    def build_from_event(cls: Self, event: NewMessage.Event) -> Self:
+        chat_id = get_dialog_id(event)
+        return CompactMessage(
+            msg_id=event.message.id,
+            chat_id=chat_id,
+            chat_name=get_chat_name(chat_id),
+            msg=event.message.message,
+            date=event.message.date
+        )
