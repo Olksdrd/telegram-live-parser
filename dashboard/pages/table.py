@@ -13,8 +13,8 @@ register_page(
 columns = [
     {'name': 'Message', 'id': 'Message'},
     {'name': 'Date', 'id': 'Date'},
-    {'name': 'Chat_Name', 'id': 'Chat_Name'},
-    {'name': 'Message_ID', 'id': 'Message_ID'},
+    {'name': 'Chat Name', 'id': 'Chat_Name'},
+    # {'name': 'Message_ID', 'id': 'Message_ID'},
 ]
 
 datatable = dash_table.DataTable(
@@ -41,10 +41,10 @@ datatable = dash_table.DataTable(
 
     # column widths
     style_cell_conditional=[
-        {'if': {'column_id': 'Message'}, 'width': '40%'},
+        {'if': {'column_id': 'Message'}, 'width': '50%'},
         # {'if': {'column_id': 'Date'}, 'width': '20%'},
         # {'if': {'column_id': 'Chat_Name'}, 'width': '20%'},
-        {'if': {'column_id': 'Message_ID'}, 'width': '10%'},
+        # {'if': {'column_id': 'Message_ID'}, 'width': '10%'},
     ],
 
     # vertical scrolling
