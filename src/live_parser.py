@@ -1,19 +1,18 @@
-import os
-import sys
-from pathlib import Path
-import logging
-import json
 import asyncio
-from dataclasses import asdict
+import json
+import logging
+import os
+from pathlib import Path
+import sys
 
 from dotenv import load_dotenv
-
 from telethon import TelegramClient
 from telethon.events import NewMessage
 
 sys.path.insert(0, os.getcwd())
-import utils.db_helpers as db  # noqa: E402
 from utils.parser_helpers import CompactMessage  # noqa: E402
+from utils.repo_interface import repository_factory  # noqa: E402
+from utils.repo.repository import Repository  # noqa: E402
 
 
 def configure() -> tuple[dict[str, int], list[int]]:
@@ -38,7 +37,7 @@ def configure() -> tuple[dict[str, int], list[int]]:
 async def live_parser(
     keys: dict[str, int],
     chat_ids: list[int],
-    collection: db.Collection
+    repository: Repository
 ) -> None:
 
     logging.info('Initializing Telegram Client...')
@@ -64,11 +63,11 @@ async def live_parser(
         if event.message.message != '':  # tbh messages with len 1 are useless
             document = CompactMessage.build_from_event(event)
 
-            response = collection.insert_one(asdict(document))
+            response = repository.put_one(document)
             logging.info(
                 f'Added message {document.msg_id} '
                 f'from chat "{document.chat_name}". '
-                f'Record ID: {response.inserted_id}.'
+                + response
             )
 
     await tg_client.run_until_disconnected()
@@ -78,16 +77,16 @@ def main() -> None:
 
     keys, chats = configure()
 
+    repository = repository_factory()
     logging.info('Connecting to database...')
-    db_client, collection = db.connect_to_mongo()
-    # actually it says this even if it didn't connect :)
+    repository.connect()
     logging.info('Connection established.')
 
     # handle SIGINT without an error message from asyncio
     try:
-        asyncio.run(live_parser(keys, chats, collection))
+        asyncio.run(live_parser(keys, chats, repository))
     except KeyboardInterrupt:
-        db_client.close()
+        repository.disconnect()
         pass  # TelegramClient connection autocloses on SIGINT
 
 
