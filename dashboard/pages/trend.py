@@ -49,7 +49,7 @@ def plot_trend(word, data):
         dff = (
             df['Message']
             .str.contains(str(word), case=False)
-            .groupby(df['Date'].dt.floor('10min'))
+            .groupby(df['Date'].dt.floor('30min'))
             .agg(['sum'])
             .reset_index()
         )

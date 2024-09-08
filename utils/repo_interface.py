@@ -19,6 +19,7 @@ def repository_factory(repo_type: str = '') -> Repository:
     if repo_type == '':
         repo_type = os.getenv('REPOSITORY_TYPE')
 
+    # ! repo in Enum should have the same name as the corresponding .py file
     repo = importlib.import_module(f'utils.repo.{repo_type}')
 
     if repo_type == RepositoryType.MONGODB:
