@@ -11,7 +11,6 @@ COPY ./dashboard/requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY dashboard .
-COPY utils ./utils
 
 RUN : \
     && addgroup --gid $GROUP_ID $USERNAME \
@@ -23,11 +22,12 @@ RUN : \
 USER $USERNAME
 
 # move to secrets in compose
+ENV REPOSITORY_TYPE=mongodb
 ENV DB_USER=root
 ENV DB_PASSWD=example
 ENV DB_IP=mongo
 ENV DB_PORT=27017
 ENV TABLE_NAME=messages
-ENV COLLECTION_NAME=test_sample2
+ENV COLLECTION_NAME=test_sample3
 
 CMD [ "python", "app.py" ]

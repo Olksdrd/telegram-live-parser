@@ -42,15 +42,14 @@ def plot_trend(word, data):
     if word:
         df = pd.DataFrame(
             data,
-            columns=['Message', 'Date', 'Chat_Name', 'Message_ID']
+            columns=['Message', 'Date', 'Chat_Name']
         )
 
         df['Date'] = pd.to_datetime(df['Date'])
-
         dff = (
             df['Message']
             .str.contains(str(word), case=False)
-            .groupby(df['Date'].dt.floor('10min'))
+            .groupby(df['Date'].dt.floor('30min'))
             .agg(['sum'])
             .reset_index()
         )

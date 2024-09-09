@@ -1,6 +1,5 @@
 import os
 import sys
-import pandas as pd
 
 from dash import (Dash, html, dcc,
                   callback, Input, Output,
@@ -8,10 +7,7 @@ from dash import (Dash, html, dcc,
 import dash_bootstrap_components as dbc
 
 sys.path.insert(0, os.getcwd())
-from utils.db_helpers import connect_to_mongo  # noqa: E402
-
-
-client, collection = connect_to_mongo()
+from utils.fetch_data import data_fetcher  # noqa: E402, E501
 
 
 app = Dash(
@@ -88,19 +84,20 @@ app.layout = dbc.Container([
 def get_data(n_clicks):
     print('Getting data from database')
 
-    df = (
-        pd.DataFrame(list(collection.find()))
-        .drop('_id', axis=1)
-        .sort_values(by='Date', ascending=False)
-        # [['Message', 'Date', 'Chat_Name', 'Message_ID']]
-    )
-
-    return df.to_dict('records')
+    return repo.get_data()
 
 
 if __name__ == '__main__':
-    app.run(
-        host='0.0.0.0',
-        port='8050',
-        debug=True
-    )
+
+    repo = data_fetcher(os.getenv('REPOSITORY_TYPE'))
+    repo.connect()
+
+    try:
+        app.run(
+            host='0.0.0.0',
+            port='8050',
+            debug=True
+        )
+    except KeyboardInterrupt:
+        repo.client.close()
+        pass
