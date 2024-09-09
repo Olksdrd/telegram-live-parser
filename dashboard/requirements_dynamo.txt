@@ -4,5 +4,3 @@ dash_bootstrap_components==1.6.0
 dynamodb-json==1.4.2
 pandas==2.2.2
 plotly==5.23.0
-python-dotenv==1.0.1
-pytz==2023.3.post1

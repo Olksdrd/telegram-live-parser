@@ -1,11 +1,11 @@
+import importlib
 import os
 from typing import Protocol
-import importlib
 
 
 class DataFetcher(Protocol):
 
-    def connect(self):
+    def connect(self) -> None:
         pass
 
     def get_data(self) -> list[dict]:
@@ -27,7 +27,7 @@ def data_fetcher(repo_type: str) -> DataFetcher:
     elif repo_type == 'dynamodb':
         return repo.DynamoFetcher(
             table_name=os.getenv('TABLE_NAME'),
-            # region=os.getenv('AWS_REGION')
+            region=os.getenv('AWS_REGION')
         )
     else:
         raise ValueError

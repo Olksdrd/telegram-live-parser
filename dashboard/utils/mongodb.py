@@ -24,7 +24,7 @@ class MongoFetcher:
         db = client.get_database(self.table_name)
         return db.get_collection(self.collection_name)
 
-    def connect(self):
+    def connect(self) -> None:
         self.client = self._get_mongo_client()
 
         self.collection = self._get_collection(self.client)

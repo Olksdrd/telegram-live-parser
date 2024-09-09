@@ -1,16 +1,15 @@
+from dataclasses import dataclass
+from datetime import datetime
+import json
 import os
 from pathlib import Path
-from datetime import datetime
-from dataclasses import dataclass
 from typing import Self
-import json
-import pytz
 
-from telethon import TelegramClient
-from telethon.tl.types import InputChannel
-from telethon.events import NewMessage
-from telethon.utils import resolve_id
 from dotenv import load_dotenv
+from telethon import TelegramClient
+from telethon.events import NewMessage
+from telethon.tl.types import InputChannel
+from telethon.utils import resolve_id
 
 load_dotenv(dotenv_path=Path('./env/config.env'))
 
@@ -50,16 +49,6 @@ names_dict = _load_chats_dict()
 
 def get_chat_name(chat_id: int) -> str:  # TODO add all dependencies
     return names_dict.get(chat_id, 'Anonymous?')
-
-
-def change_timezone(
-    timestamp: datetime,
-    timezone: str = 'Europe/Kyiv'
-) -> datetime:  # str
-    tz = pytz.timezone(timezone)
-
-    # return isoformat str for DynamoDB
-    return timestamp.astimezone(tz)  # .isoformat()
 
 
 def get_dialog_id(event: NewMessage.Event) -> int:

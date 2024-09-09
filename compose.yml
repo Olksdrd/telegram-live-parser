@@ -27,6 +27,7 @@ services:
       context: .
       dockerfile: ./dashboard/DashboardDockerfile
     container_name: dashboard
+    stop_signal: SIGINT
     read_only: true
     cap_drop:
       - ALL
