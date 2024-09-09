@@ -11,8 +11,7 @@ from telethon.events import NewMessage
 
 sys.path.insert(0, os.getcwd())
 from utils.parser_helpers import CompactMessage  # noqa: E402
-from utils.repo_interface import repository_factory  # noqa: E402
-from utils.repo.repository import Repository  # noqa: E402
+from utils.repo.interface import Repository, repository_factory  # noqa: E402
 
 
 def configure() -> tuple[dict[str, int], list[int]]:

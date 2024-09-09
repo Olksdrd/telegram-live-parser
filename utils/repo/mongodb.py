@@ -4,10 +4,9 @@ from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 
 from utils.parser_helpers import CompactMessage
-from utils.repo.repository import Repository
 
 
-class MongoRepository(Repository[CompactMessage]):
+class MongoRepository:
     def __init__(
         self,
         table_name: str,
@@ -32,7 +31,6 @@ class MongoRepository(Repository[CompactMessage]):
         # logging.info('Connection established.')
         db = self.client.get_database(self.table_name)
         self.collection = db.get_collection(self.collection_name)
-        # return self
 
     def _is_connected(self) -> bool:
         try:

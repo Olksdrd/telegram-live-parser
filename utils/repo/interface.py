@@ -1,18 +1,48 @@
-from enum import StrEnum, auto
+from enum import StrEnum
 import importlib
 import os
+from typing import Protocol
 
 from dotenv import load_dotenv
-
-from utils.repo.repository import Repository
 
 load_dotenv('./env/config.env')
 
 
 class RepositoryType(StrEnum):
-    MONGODB = auto()
-    DYNAMODB = auto()
-    LOCAL_STORAGE = auto()
+    MONGODB = 'mongodb'
+    DYNAMODB = 'dynamodb'
+    LOCAL_STORAGE = 'local'
+
+
+class Repository[T](Protocol):
+    """Repository of objects of generic type T
+    1. Connect
+    2. Check connection
+    3. Create table (optional)
+    4. Put one/many
+    5. Get all
+    6. Close connection
+    """
+    def connect(self) -> None:
+        ...
+
+    def _is_connected(self) -> bool:
+        ...
+
+    def disconnect(self) -> None:
+        ...
+
+    def put_one(self, object: T) -> str:
+        ...
+
+    # def put_many(self, objects: list[T]) -> str:
+        ...
+
+    # def get(self, id: str) -> T:
+        ...
+
+    # def get_all(self) -> list[T]:
+        ...
 
 
 def repository_factory(repo_type: str = '') -> Repository:

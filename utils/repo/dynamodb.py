@@ -1,10 +1,9 @@
 import boto3
 
 from utils.parser_helpers import CompactMessage
-from utils.repo.repository import Repository
 
 
-class DynamoRepository(Repository[CompactMessage]):
+class DynamoRepository:
     def __init__(
         self,
         table_name: str,
@@ -15,7 +14,6 @@ class DynamoRepository(Repository[CompactMessage]):
 
     def connect(self) -> None:
         self.client = boto3.client('dynamodb', region_name=self.region)
-        # return self
 
     def _is_connected(self) -> bool:
         pass
