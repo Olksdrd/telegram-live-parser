@@ -76,7 +76,15 @@ def main() -> None:
 
     keys, chats = configure()
 
-    repository = repository_factory()
+    repository = repository_factory(
+        repo_type=os.getenv('REPOSITORY_TYPE'),
+        table_name=os.getenv('TABLE_NAME'),
+        collection_name=os.getenv('COLLECTION_NAME'),
+        user=os.getenv('DB_USER'),
+        passwd=os.getenv('DB_PASSWD'),
+        ip=os.getenv('DB_IP'),
+        port=int(os.getenv('DB_PORT'))
+    )
     logging.info('Connecting to database...')
     repository.connect()
     logging.info('Connection established.')

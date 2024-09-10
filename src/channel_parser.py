@@ -1,6 +1,8 @@
 import json
 import os
 import sys
+
+from dotenv import load_dotenv
 from telethon import TelegramClient
 
 sys.path.insert(0, os.getcwd())
@@ -30,12 +32,27 @@ if __name__ == '__main__':
     with open('./tg-keys.json', 'r') as f:
         keys = json.load(f)
 
-    repository = repository_factory(repo_type='cli')
+    load_dotenv('./env/congig.env')
+
+    repository = repository_factory(
+        repo_type=os.getenv('REPOSITORY_TYPE'),
+        table_name=os.getenv('TABLE_NAME'),
+        collection_name=os.getenv('COLLECTION_NAME'),
+        user=os.getenv('DB_USER'),
+        passwd=os.getenv('DB_PASSWD'),
+        ip=os.getenv('DB_IP'),
+        port=int(os.getenv('DB_PORT'))
+    )
     repository.connect()
+
     client = TelegramClient('anon', keys['api_id'], keys['api_hash'])
 
     with client:
         client.loop.set_debug(True)
-        client.loop.run_until_complete(amain(client, repository))
+        client.loop.run_until_complete(amain(
+            client,
+            repository,
+            id=-1
+        ))
 
     repository.disconnect()
