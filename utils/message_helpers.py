@@ -7,7 +7,6 @@ from typing import Self
 
 from dotenv import load_dotenv
 from telethon import TelegramClient
-from telethon.events import NewMessage
 from telethon.tl.custom.message import Message
 from telethon.tl.types import InputChannel
 from telethon.utils import resolve_id
@@ -76,17 +75,6 @@ class CompactMessage:
     date: datetime
     # TODO: investigate other attributes in more details
     # note that chat_id + msg_id should provide unique primary key
-
-    @classmethod
-    def build_from_event(cls: Self, event: NewMessage.Event) -> Self:
-        chat_id = get_dialog_id(event)  # check arguments ??? or drop method
-        return CompactMessage(
-            msg_id=event.message.id,
-            chat_id=chat_id,
-            chat_name=get_chat_name(chat_id),
-            msg=event.message.message,
-            date=event.message.date
-        )
 
     @classmethod
     def build_from_message(cls: Self, message: Message) -> Self:

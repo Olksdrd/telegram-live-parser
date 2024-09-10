@@ -60,7 +60,7 @@ async def live_parser(
     async def handler(event: NewMessage.Event) -> None:
         # parse only messages with text, though images may also be of interest
         if event.message.message != '':  # tbh messages with len 1 are useless
-            document = CompactMessage.build_from_event(event)
+            document = CompactMessage.build_from_message(event.message)
 
             response = repository.put_one(document)
             logging.info(
