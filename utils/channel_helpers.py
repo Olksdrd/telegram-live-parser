@@ -1,10 +1,9 @@
 from dataclasses import dataclass, field, fields
 from datetime import datetime
-import json
 from typing import Optional, Self
 
 from telethon import TelegramClient
-from telethon.tl.types import PeerChannel, PeerChat, PeerUser, ChatFull, UserFull  # noqa: F401, E501
+from telethon.tl.types import PeerChannel, PeerChat, PeerUser, ChatFull, UserFull, TypePeer  # noqa: F401, E501
 from telethon.functions import channels, users, messages
 from telethon.errors.rpcerrorlist import ChatIdInvalidError
 # from telethon.utils import get_display_name
@@ -118,61 +117,76 @@ class CompactUser:
         return '\n'.join(res)
 
 
-async def get_channel_info(client, id):
+TypeCompact = CompactChannel | CompactChat | CompactUser
+
+
+def get_dialog_id(peer: TypePeer) -> int:
+    if isinstance(peer, PeerChannel):
+        return peer.channel_id
+    elif isinstance(peer, PeerChat):
+        return peer.chat_id
+    elif isinstance(peer, PeerUser):
+        return peer.user_id
+    else:
+        return -1
+
+
+async def get_channel_info(
+    client: TelegramClient,
+    peer: TypePeer
+) -> PeerChannel:
     try:
-        return await client(channels.GetFullChannelRequest(PeerChannel(id)))
+        return await client(channels.GetFullChannelRequest(peer))
     except (ValueError, TypeError):
-        print(f'Channel {id} not found.')
+        print(f'{peer} not found.')
         return None
 
 
-async def get_user_info(client, id):
+async def get_user_info(
+    client: TelegramClient,
+    peer: TypePeer
+) -> PeerUser:
     try:
-        return await client(users.GetFullUserRequest(PeerUser(id)))
+        return await client(users.GetFullUserRequest(peer))
     except ValueError:
-        print(f'User {id} not found.')
+        print(f'{peer} not found.')
         return None
 
 
-async def get_chat_info(client, id):
+async def get_chat_info(
+    client: TelegramClient,
+    peer: TypePeer
+) -> PeerChat:
     try:
-        return await client(messages.GetFullChatRequest(id))
+        return await client(messages.GetFullChatRequest(peer))
     except ChatIdInvalidError:
-        print(f'Chat {id} not found.')
+        print(f'{peer} not found.')
         return None
 
 
-async def amain(client, id, type='channel'):
-    # print(get_display_name(PeerChannel(id)))
-    if type == 'channel':
-        res = await get_channel_info(client, id)
+async def entitity_info_request(
+    client: TelegramClient,
+    peer: TypePeer
+) -> TypeCompact:
+    if isinstance(peer, PeerChannel):
+        res = await get_channel_info(client, peer)
         if res is not None:
-            # print(res.stringify())
-            print(CompactChannel.build_from_api(res))
-            pass
-    elif type == 'chat':
-        res = await get_chat_info(client, id)
+            return CompactChannel.build_from_api(res)
+    elif isinstance(peer, PeerChat):
+        res = await get_chat_info(client, peer)
         if res is not None:
-            print(CompactChat.build_from_api(res))
-    elif type == 'user':
-        res = await get_user_info(client, id)
+            return CompactChat.build_from_api(res)
+    elif isinstance(peer, PeerUser):
+        res = await get_user_info(client, peer)
         if res is not None:
-            # print(res.stringify())
-            print(CompactUser.build_from_api(res))
-
-    # get channel by username
-    chat = await client.get_input_entity('username')  # to cache entity you'll use alot  # noqa: E501
-    print(chat.stringify())
+            return CompactUser.build_from_api(res)
 
 
-if __name__ == '__main__':
-    with open('./tg-keys.json', 'r') as f:
-        keys = json.load(f)
-
-    client = TelegramClient('anon', keys['api_id'], keys['api_hash'])
-
-    with client:
-        client.loop.set_debug(True)
-        client.loop.run_until_complete(amain(client))
-        # res = client.loop.run_until_complete(amain(client))
-        # print(res.stringify())
+# async def get_full_entity_info(peer, seen_channels):
+#     peer_id = get_dialog_id(peer)
+#     if peer_id not in seen_channels.keys():
+#         res = await entitity_info_request(client, peer)
+#         seen_channels[peer_id] = res
+#     else:
+#         res = seen_channels[peer_id]
+#     return res
