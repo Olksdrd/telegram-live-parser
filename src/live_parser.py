@@ -10,7 +10,7 @@ from telethon import TelegramClient
 from telethon.events import NewMessage
 
 sys.path.insert(0, os.getcwd())
-from utils.parser_helpers import CompactMessage  # noqa: E402
+from utils.message_helpers import CompactMessage  # noqa: E402
 from utils.repo.interface import Repository, repository_factory  # noqa: E402
 
 

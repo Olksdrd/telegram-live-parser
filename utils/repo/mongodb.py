@@ -3,7 +3,7 @@ from dataclasses import asdict
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
 
-from utils.parser_helpers import CompactMessage
+from utils.message_helpers import CompactMessage
 
 
 class MongoRepository:
