@@ -4,7 +4,7 @@ import json
 from utils.message_helpers import CompactMessage
 
 
-class Repository:
+class CLIRepository:
 
     def connect(self) -> None:
         pass

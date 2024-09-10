@@ -75,8 +75,8 @@ def repository_factory(
             table_name=table_name,
         )
     elif repo_type == RepositoryType.CLI:
-        return repo.Repository()
+        return repo.CLIRepository()
     elif repo_type == RepositoryType.LOCAL_STORAGE:
-        raise NotImplementedError
+        return repo.LocalRepository(table_name=table_name)
     else:
         raise ValueError
