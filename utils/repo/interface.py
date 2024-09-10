@@ -12,6 +12,7 @@ class RepositoryType(StrEnum):
     MONGODB = 'mongodb'
     DYNAMODB = 'dynamodb'
     LOCAL_STORAGE = 'local'
+    CLI = 'cli'
 
 
 class Repository[T](Protocol):
@@ -66,6 +67,8 @@ def repository_factory(repo_type: str = '') -> Repository:
             table_name=os.getenv('TABLE_NAME'),
             region=os.getenv('AWS_REGION')
         )
+    elif repo_type == RepositoryType.CLI:
+        return repo.Repository()
     elif repo_type == RepositoryType.LOCAL_STORAGE:
         raise NotImplementedError
     else:
