@@ -1,4 +1,3 @@
-from dataclasses import asdict
 import json
 
 from utils.message_helpers import CompactMessage
@@ -16,12 +15,11 @@ class CLIRepository:
         pass
 
     def put_one(self, object: CompactMessage) -> str:
-        print(json.dumps(asdict(object), default=str, ensure_ascii=False))
+        print(json.dumps(object, default=str, ensure_ascii=False))
         return '-' * 40
 
     def put_many(self, objects: list[CompactMessage]) -> str:
-        docs = [asdict(obj) for obj in objects]
-        print(json.dumps(docs, default=str, ensure_ascii=False))
+        print(json.dumps(objects, default=str, ensure_ascii=False))
         return '-' * 40
 
     # def get(self, id: str) -> T:

@@ -1,4 +1,3 @@
-from dataclasses import asdict
 import json
 import os
 from typing import Optional
@@ -31,22 +30,21 @@ class LocalRepository:
                 position = file.tell() - 1
                 file.seek(position)
                 file.write(',{}]'.format(json.dumps(
-                    asdict(object),
+                    object,
                     default=str,
                     ensure_ascii=False
                 )))
             except ValueError:
                 file.write('[{}]'.format(json.dumps(
-                    asdict(object),
+                    object,
                     default=str,
                     ensure_ascii=False
                 )))
         return '-' * 40
 
     def put_many(self, objects: list[CompactMessage]) -> str:
-        docs = [asdict(obj) for obj in objects]
         with open(self.path, 'w') as f:
-            json.dump(docs, f, default=str, ensure_ascii=False)
+            json.dump(objects, f, default=str, ensure_ascii=False)
         return '-' * 40
 
     # def get(self, id: str) -> T:

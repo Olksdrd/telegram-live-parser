@@ -1,11 +1,6 @@
 from enum import StrEnum
 import importlib
-import os
 from typing import Optional, Protocol
-
-from dotenv import load_dotenv
-
-load_dotenv('./env/config.env')
 
 
 class RepositoryType(StrEnum):
@@ -36,7 +31,7 @@ class Repository[T](Protocol):
     def put_one(self, object: T) -> str:
         ...
 
-    # def put_many(self, objects: list[T]) -> str:
+    def put_many(self, objects: list[T]) -> str:
         ...
 
     # def get(self, id: str) -> T:
@@ -47,7 +42,7 @@ class Repository[T](Protocol):
 
 
 def repository_factory(
-    repo_type: str = '',
+    repo_type: str,
     table_name: Optional[str] = 'cli',
     collection_name: Optional[str] = None,
     user: Optional[str] = None,
@@ -55,8 +50,6 @@ def repository_factory(
     ip: Optional[str] = None,
     port: Optional[str | int] = None
 ) -> Repository:
-    if repo_type == '':
-        repo_type = os.getenv('REPOSITORY_TYPE')
 
     # ! repo in Enum should have the same name as the corresponding .py file
     repo = importlib.import_module(f'utils.repo.{repo_type}')
