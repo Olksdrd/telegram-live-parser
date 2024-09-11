@@ -9,7 +9,7 @@ sys.path.insert(0, os.getcwd())
 from utils.repo.interface import Repository, repository_factory  # noqa: E402, E501
 from utils.channel_helpers import (  # noqa: E402
     CompactChannel, CompactChat, CompactUser, TypeCompact,
-    get_dialog_id, entitity_info_request)
+    get_peer_id, entitity_info_request)
 
 
 async def amain(
@@ -18,23 +18,24 @@ async def amain(
     id: int,
     seen_channels: dict[int, TypeCompact]
 ) -> None:
-    chat = await client.get_input_entity(id)
-
+    try:
+        chat = await client.get_input_entity(id)
+    except ValueError:
+        chat = await entitity_info_request(client, id)
     # docs = []
-    async for message in client.iter_messages(chat, limit=30):
+    async for message in client.iter_messages(chat, limit=100):
         if message.fwd_from is not None:
             peer = message.fwd_from.from_id
-            peer_id = get_dialog_id(peer)
+            peer_id = get_peer_id(peer)
             if peer_id not in seen_channels.keys():
                 res = await entitity_info_request(client, peer)
                 seen_channels[peer_id] = res
             else:
                 res = seen_channels[peer_id]
-            # if res is not None:
-            if isinstance(res, CompactChannel) or isinstance(res, CompactChat):
+            if res is not None:
                 # docs.append(res)
                 repository.put_one(res)
-
+    seen_channels.pop(None)  # TODO: save them somewhere?
     # repository.put_many(docs)
 
 
@@ -51,7 +52,7 @@ if __name__ == '__main__':
         user=os.getenv('DB_USER'),
         passwd=os.getenv('DB_PASSWD'),
         ip=os.getenv('DB_IP'),
-        port=int(os.getenv('DB_PORT'))
+        port=os.getenv('DB_PORT')
     )
     repository.connect()
 

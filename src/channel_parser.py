@@ -6,8 +6,7 @@ from dotenv import load_dotenv
 from telethon import TelegramClient
 
 sys.path.insert(0, os.getcwd())
-from utils.message_helpers import CompactMessage  # noqa: E402, E501
-# from utils.reactions_helpers import MessageInteractions  # noqa: E402, E501
+from utils.message_helpers import MessageBuilder  # noqa: E402, E501
 from utils.repo.interface import Repository, repository_factory  # noqa: E402, E501
 
 
@@ -21,12 +20,16 @@ async def amain(
     docs = []
     async for message in client.iter_messages(chat, limit=100):
 
-        doc = CompactMessage.build_from_message(message)
-        docs.append(doc)
-        # repository.put_one(doc)
-        # print(await MessageInteractions.build_from_message(message))
+        # don't chain them since async ones return coroutines and not builders
+        builder = MessageBuilder(message).extract_text()
+        builder = await builder.extract_engagements()
+        builder = builder.extract_forwards()
+        doc = await builder.build()
 
-    repository.put_many(docs)
+        docs.append(doc)
+        repository.put_one(doc)
+
+    # repository.put_many(docs)
 
 if __name__ == '__main__':
     with open('./tg-keys.json', 'r') as f:

@@ -10,7 +10,7 @@ from telethon import TelegramClient
 from telethon.events import NewMessage
 
 sys.path.insert(0, os.getcwd())
-from utils.message_helpers import CompactMessage  # noqa: E402
+from utils.message_helpers import MessageBuilder  # noqa: E402
 from utils.repo.interface import Repository, repository_factory  # noqa: E402
 
 
@@ -60,12 +60,14 @@ async def live_parser(
     async def handler(event: NewMessage.Event) -> None:
         # parse only messages with text, though images may also be of interest
         if event.message.message != '':  # tbh messages with len 1 are useless
-            document = CompactMessage.build_from_message(event.message)
+            builder = MessageBuilder(event.message).extract_text()
+            builder = builder.extract_forwards()
+            document = await builder.build()
 
             response = repository.put_one(document)
             logging.info(
-                f'Added message {document.msg_id} '
-                f'from chat "{document.chat_name}". '
+                f'Added message {document["msg_id"]} '
+                f'from chat "{document['chat_name']}". '
                 + response
             )
 
