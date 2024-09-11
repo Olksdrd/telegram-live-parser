@@ -1,26 +1,23 @@
-from dataclasses import dataclass, field, fields
 from datetime import datetime
-from typing import Optional, Self
+from typing import Optional, Self, TypedDict
 
 from telethon import TelegramClient
 from telethon.tl.types import PeerChannel, PeerChat, PeerUser, ChatFull, UserFull, TypePeer  # noqa: F401, E501
 from telethon.functions import channels, users, messages
 from telethon.errors.rpcerrorlist import ChatIdInvalidError
-# from telethon.utils import get_display_name
 
 
-@dataclass(frozen=True)
-class CompactChannel:
+class CompactChannel(TypedDict, total=False):
     id: int
     name: str
     title: str
     description: str
     participants_count: int
     creation_date: datetime
-    chats: list[int] = field(default_factory=list)  # can get into a periodic cycle if followed -> use lookup table  # noqa: E501
+    chats: list[int]  # can get into a periodic cycle if followed -> use lookup table  # noqa: E501
 
     @classmethod
-    def build_from_api(cls: Self, response: ChatFull) -> Self:
+    def build_from_api(cls, response: ChatFull) -> Self:
         return CompactChannel(
             id=response.full_chat.id,
             name=response.chats[0].username,
@@ -31,22 +28,8 @@ class CompactChannel:
             chats=[chat.id for chat in response.chats[1:]]
         )
 
-    def __repr__(self) -> None:
-        """Just a fancy multiline repr"""
-        cls = self.__class__
-        cls_name = cls.__name__
-        indent = ' ' * 4
-        res = [f'{cls_name}(']
-        for f in fields(cls):
-            value = getattr(self, f.name)
-            res.append(f'{indent}{f.name} = {value!r},')
 
-        res.append(')')
-        return '\n'.join(res)
-
-
-@dataclass(frozen=True)
-class CompactChat:
+class CompactChat(TypedDict, total=False):
     id: int
     # name: str
     title: str
@@ -57,7 +40,7 @@ class CompactChat:
     parent_channel: int
 
     @classmethod
-    def build_from_api(cls: Self, response: ChatFull) -> Self:
+    def build_from_api(cls, response: ChatFull) -> Self:
         return CompactChat(
             id=response.full_chat.id,
             # name=response.chats[0].username,
@@ -69,22 +52,8 @@ class CompactChat:
             parent_channel=response.chats[0].migrated_to.channel_id
         )
 
-    def __repr__(self) -> None:
-        """Just a fancy multiline repr"""
-        cls = self.__class__
-        cls_name = cls.__name__
-        indent = ' ' * 4
-        res = [f'{cls_name}(']
-        for f in fields(cls):
-            value = getattr(self, f.name)
-            res.append(f'{indent}{f.name} = {value!r},')
 
-        res.append(')')
-        return '\n'.join(res)
-
-
-@dataclass(frozen=True)
-class CompactUser:
+class CompactUser(TypedDict, total=False):
     id: int
     username: str
     first_name: Optional[str]
@@ -93,7 +62,7 @@ class CompactUser:
     description: Optional[str]
 
     @classmethod
-    def build_from_api(cls: Self, response: UserFull) -> Self:
+    def build_from_api(cls, response: UserFull) -> Self:
         return CompactUser(
             id=response.users[0].id,
             username=response.users[0].username,
@@ -103,24 +72,11 @@ class CompactUser:
             description=response.full_user.about
         )
 
-    def __repr__(self) -> None:
-        """Just a fancy multiline repr"""
-        cls = self.__class__
-        cls_name = cls.__name__
-        indent = ' ' * 4
-        res = [f'{cls_name}(']
-        for f in fields(cls):
-            value = getattr(self, f.name)
-            res.append(f'{indent}{f.name} = {value!r},')
-
-        res.append(')')
-        return '\n'.join(res)
-
 
 TypeCompact = CompactChannel | CompactChat | CompactUser
 
 
-def get_dialog_id(peer: TypePeer) -> int:
+def get_peer_id(peer: TypePeer) -> int | None:
     if isinstance(peer, PeerChannel):
         return peer.channel_id
     elif isinstance(peer, PeerChat):
@@ -128,7 +84,7 @@ def get_dialog_id(peer: TypePeer) -> int:
     elif isinstance(peer, PeerUser):
         return peer.user_id
     else:
-        return -1
+        return None
 
 
 async def get_channel_info(
