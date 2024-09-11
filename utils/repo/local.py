@@ -13,7 +13,6 @@ class LocalRepository:
         self.path = f'./{table_name}.json'
 
     def connect(self) -> None:
-        # pass
         if not os.path.exists(self.path):
             os.mknod(self.path)
 
@@ -43,6 +42,8 @@ class LocalRepository:
         return '-' * 40
 
     def put_many(self, objects: list[CompactMessage]) -> str:
+        if os.path.exists(self.path):
+            raise Exception(f'{self.path} already exists!')
         with open(self.path, 'w') as f:
             json.dump(objects, f, default=str, ensure_ascii=False)
         return '-' * 40
