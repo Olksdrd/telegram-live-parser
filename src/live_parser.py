@@ -14,7 +14,7 @@ from utils.message_helpers import MessageBuilder  # noqa: E402
 from utils.repo.interface import Repository, repository_factory  # noqa: E402
 
 
-def configure() -> tuple[dict[str, int], list[int]]:
+def configure() -> tuple[dict[str, int], list[dict]]:
 
     load_dotenv(dotenv_path=Path('./env/config.env'))
 
@@ -26,16 +26,15 @@ def configure() -> tuple[dict[str, int], list[int]]:
     with open(os.getenv('TG_KEYS_FILE'), 'r') as f:
         keys = json.load(f)
 
-    with open(os.getenv('CHANNEL_LIST_FILE'), 'r', encoding='utf-16') as f:
+    with open(os.getenv('CHANNEL_LIST_FILE'), 'r') as f:
         chats = json.load(f)
-    chat_ids = list(chats.values())
 
-    return keys, chat_ids
+    return keys, chats
 
 
 async def live_parser(
     keys: dict[str, int],
-    chat_ids: list[int],
+    chats: list[dict],
     repository: Repository
 ) -> None:
 
@@ -49,7 +48,9 @@ async def live_parser(
     await tg_client.start()
     logging.info('Telegram Client started.')
 
-    logging.info(f'Parsing data from {len(chat_ids)} chats...')
+    logging.info(f'Parsing data from {len(chats)} chats...')
+
+    chat_ids = [chat['id'] for chat in chats]
 
     @tg_client.on(NewMessage(
         chats=chat_ids,
@@ -60,14 +61,18 @@ async def live_parser(
     async def handler(event: NewMessage.Event) -> None:
         # parse only messages with text, though images may also be of interest
         if event.message.message != '':  # tbh messages with len 1 are useless
-            builder = MessageBuilder(event.message).extract_text()
-            builder = builder.extract_forwards()
+            builder = (
+                MessageBuilder(event.message, chats=chats)
+                .extract_text()
+                .extract_dialog_name()
+                .extract_forwards()
+            )
             document = await builder.build()
 
             response = repository.put_one(document)
             logging.info(
                 f'Added message {document["msg_id"]} '
-                f'from chat "{document['chat_name']}". '
+                f'from chat {document["chat_id"]}. '
                 + response
             )
 

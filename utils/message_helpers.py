@@ -1,9 +1,8 @@
 from datetime import datetime
-import json
 import os
 from pathlib import Path
 import sys
-from typing import Self, TypedDict
+from typing import Self, TypedDict, Coroutine, Optional
 
 from dotenv import load_dotenv
 from telethon import TelegramClient
@@ -17,28 +16,6 @@ sys.path.insert(0, os.getcwd())
 from utils.channel_helpers import get_peer_id  # noqa: E402
 
 load_dotenv(dotenv_path=Path('./env/config.env'))
-
-
-def _load_chats_dict() -> dict[int, str]:
-    with open(os.getenv('CHANNEL_LIST_FILE'), 'r', encoding='utf-16') as f:
-        chats = json.load(f)
-
-    names_dict = {val: key for key, val in chats.items()}
-
-    return names_dict
-
-
-names_dict = _load_chats_dict()
-
-
-def get_chat_name(
-    chat_id: int,
-    # names_dict: dict[int, str]
-) -> str:
-    # TODO: make an adapter to allow looking in database of channels
-    # adapter as a Protocol that has a get method
-    # then also get chat "username"
-    return names_dict.get(chat_id, None)
 
 
 def get_dialog_id(message: Message) -> int:
@@ -105,22 +82,17 @@ class CompactMessage(TypedDict, total=False):
     # TODO: investigate other attributes in more details
     # note that chat_id + msg_id should provide unique primary key
 
-    @classmethod
-    def build_from_message(cls: Self, message: Message) -> Self:
-        chat_id = get_dialog_id(message)
-        return CompactMessage(
-            msg_id=message.id,
-            chat_id=chat_id,
-            chat_name=get_chat_name(chat_id),
-            msg=message.message,
-            date=message.date
-        )
-
 
 class MessageBuilder:
-    def __init__(self, new_msg) -> None:
+    def __init__(
+        self,
+        new_msg: Message,
+        chats: Optional[list[dict]] = None
+    ) -> None:
         self.new_msg = new_msg
         self.message = CompactMessage()
+        if chats:
+            self.chats = {chat['id']: chat for chat in chats}
 
     def extract_text(self) -> Self:
         self.message['msg_id'] = self.new_msg.id
@@ -129,7 +101,16 @@ class MessageBuilder:
         self.message['date'] = self.new_msg.date
         return self
 
-    async def extract_engagements(self) -> Self:
+    def extract_dialog_name(self) -> Self:
+        chat_name = self.chats[self.message['chat_id']].get('name')
+        chat_title = self.chats[self.message['chat_id']].get('title')
+        if chat_name is None:
+            chat_name = self.chats[self.message['chat_id']].get('username')
+        self.message['chat_name'] = chat_name
+        self.message['chat_title'] = chat_title
+        return self
+
+    async def extract_engagements(self) -> Coroutine:
         self.message['views'] = self.new_msg.views
         self.message['forwards'] = self.new_msg.forwards
         self.message['replies'] = await get_reply_count(self.new_msg.replies)
@@ -144,5 +125,5 @@ class MessageBuilder:
                 self.message['fwd_from'] = peer_id
         return self
 
-    async def build(self):
+    async def build(self) -> Coroutine:
         return self.message
