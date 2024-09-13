@@ -77,7 +77,7 @@ TypeCompact = CompactChannel | CompactChat | CompactUser
 
 
 def get_compact_name(dialog: TypeCompact) -> str:
-    name = dialog.get('name')
+    name = dialog.get('title')
     if name is None:
         name = dialog.get('username')
     return name
