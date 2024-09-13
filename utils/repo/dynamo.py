@@ -4,7 +4,7 @@ from utils.message_helpers import CompactMessage
 
 
 class DynamoRepository:
-    def __init__(self, table_name: str, region: str = "eu-central-1") -> None:
+    def __init__(self, table_name: str, region: str = "eu-central-1", **kwargs) -> None:
         self.region = region
         self.table_name = table_name
 

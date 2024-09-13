@@ -3,13 +3,6 @@ from enum import StrEnum
 from typing import Optional, Protocol
 
 
-class RepositoryType(StrEnum):
-    MONGODB = "mongodb"
-    DYNAMODB = "dynamodb"
-    LOCAL_STORAGE = "local"
-    CLI = "cli"
-
-
 class Repository[T](Protocol):
     """Repository of objects of generic type T
     1. Connect
@@ -42,35 +35,36 @@ class Repository[T](Protocol):
     #     pass
 
 
+class RepositoryType(StrEnum):
+    MONGODB = "mongo"
+    DYNAMODB = "dynamo"
+    LOCAL_STORAGE = "local"
+    CLI = "cli"
+
+
 def repository_factory(
     repo_type: str,
-    table_name: Optional[str] = "cli",
+    table_name: Optional[str],
     collection_name: Optional[str] = None,
     user: Optional[str] = None,
     passwd: Optional[str] = None,
     ip: Optional[str] = None,
     port: Optional[str | int] = None,
+    region: Optional[str] = "eu-central-1",
 ) -> Repository:
-
-    # ! repo in Enum should have the same name as the corresponding .py file
-    repo = importlib.import_module(f"utils.repo.{repo_type}")
-
-    if repo_type == RepositoryType.MONGODB:
-        return repo.MongoRepository(
-            table_name=table_name,
-            collection_name=collection_name,
-            user=user,
-            passwd=passwd,
-            ip=ip,
-            port=port,
-        )
-    elif repo_type == RepositoryType.DYNAMODB:
-        return repo.DynamoRepository(
-            table_name=table_name,
-        )
-    elif repo_type == RepositoryType.CLI:
-        return repo.CLIRepository()
-    elif repo_type == RepositoryType.LOCAL_STORAGE:
-        return repo.LocalRepository(table_name=table_name)
-    else:
-        raise ValueError
+    # allows to avoid installing unnecessary dependencies
+    # ! repo_type should be one of the options from the Enum above
+    # load corresponding module from .utils/repo directory
+    repo_module = importlib.import_module(f"utils.repo.{repo_type.lower()}")
+    # get repository class by name
+    repo = getattr(repo_module, f"{repo_type.capitalize()}Repository")
+    # unused kwargs will be ignored
+    return repo(
+        table_name=table_name,
+        collection_name=collection_name,
+        user=user,
+        passwd=passwd,
+        ip=ip,
+        port=port,
+        region=region,
+    )

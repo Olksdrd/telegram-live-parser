@@ -13,6 +13,7 @@ class MongoRepository:
         passwd: str,
         ip: str,
         port: int = 27017,
+        **kwargs,
     ) -> None:
         self._db_uri = f"mongodb://{user}:{passwd}@{ip}:{port}"
         self.table_name = table_name

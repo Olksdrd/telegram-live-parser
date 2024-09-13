@@ -6,7 +6,7 @@ from utils.message_helpers import CompactMessage
 
 
 class LocalRepository:
-    def __init__(self, table_name: Optional[str] = None) -> None:
+    def __init__(self, table_name: Optional[str] = None, **kwargs) -> None:
         self.path = f"./{table_name}.json"
 
     def connect(self) -> None:
@@ -41,8 +41,8 @@ class LocalRepository:
             json.dump(docs, f, default=str, ensure_ascii=False)
         return "-" * 40
 
-        # def get(self, id: str) -> T:
-        ...
+    # def get(self, id: str) -> T:
+    #     pass
 
-        # def get_all(self) -> list[T]:
-        ...
+    # def get_all(self) -> list[T]:
+    #     pass

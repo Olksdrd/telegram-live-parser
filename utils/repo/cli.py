@@ -3,7 +3,9 @@ import json
 from utils.message_helpers import CompactMessage
 
 
-class CLIRepository:
+class CliRepository:
+    def __init__(self, **kwargs) -> None:
+        pass
 
     def connect(self) -> None:
         pass
@@ -24,8 +26,8 @@ class CLIRepository:
         print(json.dumps(docs, default=str, ensure_ascii=False))
         return "-" * 40
 
-        # def get(self, id: str) -> T:
-        ...
+    # def get(self, id: str) -> T:
+    #     pass
 
-        # def get_all(self) -> list[T]:
-        ...
+    # def get_all(self) -> list[T]:
+    #     pass
