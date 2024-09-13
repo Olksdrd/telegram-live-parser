@@ -1,21 +1,25 @@
+import json
 import os
 import sys
 from pathlib import Path
-import json
 
 from dotenv import load_dotenv
-
 from telethon import TelegramClient
 from telethon.tl.types import Chat
 
 sys.path.insert(0, os.getcwd())
-from utils.channel_helpers import CompactChannel, CompactChat, CompactUser, TypeCompact  # noqa: E402, E501
+from utils.channel_helpers import (
+    CompactChannel,
+    CompactChat,
+    CompactUser,
+    TypeCompact,
+)
 
 
 def configure() -> dict[str, int]:
     load_dotenv(dotenv_path=Path("./env/config.env"))
 
-    with open(os.getenv('TG_KEYS_FILE'), 'r') as f:
+    with open(os.getenv("TG_KEYS_FILE"), "r") as f:
         keys = json.load(f)
 
     return keys
@@ -47,7 +51,7 @@ def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
                 id=dialog.entity.id,
                 title=dialog.entity.title,
                 creation_date=dialog.entity.date,
-                parent_channel=parent_peer.channel_id if parent_peer else None
+                parent_channel=parent_peer.channel_id if parent_peer else None,
             )
         else:
             # ignore ChatForbidden and megagroups for now
@@ -55,7 +59,8 @@ def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
 
         if compact_dialog:
             dialogs_to_parse.append(
-                {k: v for k, v in compact_dialog.items() if v is not None})
+                {k: v for k, v in compact_dialog.items() if v is not None}
+            )
 
     return dialogs_to_parse
 
@@ -63,29 +68,19 @@ def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
 def main() -> None:
     keys = configure()
 
-    client = TelegramClient(
-        keys['session_name'],
-        keys['api_id'],
-        keys['api_hash']
-    )
+    client = TelegramClient(keys["session_name"], keys["api_id"], keys["api_hash"])
     client.start()
 
     dialogs_to_parse = get_subscriptions_list(client)
 
-    with open(os.getenv('CHANNEL_LIST_FILE'), 'w') as f:
-        json.dump(
-            obj=dialogs_to_parse,
-            fp=f,
-            indent=4,
-            ensure_ascii=False,
-            default=str
-        )
+    with open(os.getenv("CHANNEL_LIST_FILE"), "w") as f:
+        json.dump(obj=dialogs_to_parse, fp=f, indent=4, ensure_ascii=False, default=str)
 
     print(
-        f'Info for {len(dialogs_to_parse)} chats saved to '
+        f"Info for {len(dialogs_to_parse)} chats saved to "
         f'{os.getenv("CHANNEL_LIST_FILE")}'
     )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

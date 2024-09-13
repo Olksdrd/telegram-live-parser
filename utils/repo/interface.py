@@ -1,13 +1,13 @@
-from enum import StrEnum
 import importlib
+from enum import StrEnum
 from typing import Optional, Protocol
 
 
 class RepositoryType(StrEnum):
-    MONGODB = 'mongodb'
-    DYNAMODB = 'dynamodb'
-    LOCAL_STORAGE = 'local'
-    CLI = 'cli'
+    MONGODB = "mongodb"
+    DYNAMODB = "dynamodb"
+    LOCAL_STORAGE = "local"
+    CLI = "cli"
 
 
 class Repository[T](Protocol):
@@ -19,40 +19,41 @@ class Repository[T](Protocol):
     5. Get all
     6. Close connection
     """
+
     def connect(self) -> None:
-        ...
+        pass
 
     def _is_connected(self) -> bool:
-        ...
+        pass
 
     def disconnect(self) -> None:
-        ...
+        pass
 
     def put_one(self, object: T) -> str:
-        ...
+        pass
 
     def put_many(self, objects: list[T]) -> str:
-        ...
+        pass
 
     # def get(self, id: str) -> T:
-        ...
+    #     pass
 
     # def get_all(self) -> list[T]:
-        ...
+    #     pass
 
 
 def repository_factory(
     repo_type: str,
-    table_name: Optional[str] = 'cli',
+    table_name: Optional[str] = "cli",
     collection_name: Optional[str] = None,
     user: Optional[str] = None,
     passwd: Optional[str] = None,
     ip: Optional[str] = None,
-    port: Optional[str | int] = None
+    port: Optional[str | int] = None,
 ) -> Repository:
 
     # ! repo in Enum should have the same name as the corresponding .py file
-    repo = importlib.import_module(f'utils.repo.{repo_type}')
+    repo = importlib.import_module(f"utils.repo.{repo_type}")
 
     if repo_type == RepositoryType.MONGODB:
         return repo.MongoRepository(
@@ -61,7 +62,7 @@ def repository_factory(
             user=user,
             passwd=passwd,
             ip=ip,
-            port=port
+            port=port,
         )
     elif repo_type == RepositoryType.DYNAMODB:
         return repo.DynamoRepository(

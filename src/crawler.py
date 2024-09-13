@@ -6,17 +6,22 @@ from dotenv import load_dotenv
 from telethon import TelegramClient
 
 sys.path.insert(0, os.getcwd())
-from utils.repo.interface import Repository, repository_factory  # noqa: E402, E501
-from utils.channel_helpers import (  # noqa: E402
-    CompactChannel, CompactChat, CompactUser, TypeCompact,
-    get_peer_id, entitity_info_request)
+from utils.channel_helpers import (
+    CompactChannel,
+    CompactChat,
+    CompactUser,
+    TypeCompact,
+    entitity_info_request,
+    get_peer_id,
+)
+from utils.repo.interface import Repository, repository_factory
 
 
 async def amain(
     client: TelegramClient,
     repository: Repository,
     id: int,
-    seen_channels: dict[int, TypeCompact]
+    seen_channels: dict[int, TypeCompact],
 ) -> None:
     try:
         chat = await client.get_input_entity(id)
@@ -39,31 +44,27 @@ async def amain(
     # repository.put_many(docs)
 
 
-if __name__ == '__main__':
-    with open('./tg-keys.json', 'r') as f:
+if __name__ == "__main__":
+    with open("./tg-keys.json", "r") as f:
         keys = json.load(f)
 
-    load_dotenv('./env/congig.env')
+    load_dotenv("./env/congig.env")
 
     repository = repository_factory(
-        repo_type=os.getenv('REPOSITORY_TYPE'),
-        table_name='cached_channels',
-        collection_name=os.getenv('COLLECTION_NAME'),
-        user=os.getenv('DB_USER'),
-        passwd=os.getenv('DB_PASSWD'),
-        ip=os.getenv('DB_IP'),
-        port=os.getenv('DB_PORT')
+        repo_type=os.getenv("REPOSITORY_TYPE"),
+        table_name="cached_channels",
+        collection_name=os.getenv("COLLECTION_NAME"),
+        user=os.getenv("DB_USER"),
+        passwd=os.getenv("DB_PASSWD"),
+        ip=os.getenv("DB_IP"),
+        port=os.getenv("DB_PORT"),
     )
     repository.connect()
 
-    client = TelegramClient('anon', keys['api_id'], keys['api_hash'])
+    client = TelegramClient("anon", keys["api_id"], keys["api_hash"])
 
     with client:
         client.loop.set_debug(True)
-        client.loop.run_until_complete(amain(
-            client,
-            repository,
-            seen_channels={}
-        ))
+        client.loop.run_until_complete(amain(client, repository, seen_channels={}))
 
     repository.disconnect()

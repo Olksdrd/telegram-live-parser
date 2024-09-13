@@ -1,21 +1,27 @@
-from datetime import datetime
 import os
-from pathlib import Path
 import sys
-from typing import Self, TypedDict, Coroutine, Optional
+from datetime import datetime
+from pathlib import Path
+from typing import Coroutine, Optional, Self, TypedDict
 
 from dotenv import load_dotenv
-from telethon import TelegramClient
+from telethon import TelegramClient, functions
 from telethon.tl.custom.message import Message
+from telethon.tl.types import (
+    Document,
+    DocumentAttributeCustomEmoji,
+    MessageReactions,
+    MessageReplies,
+    ReactionCount,
+    ReactionCustomEmoji,
+    ReactionEmoji,
+)
 from telethon.utils import resolve_id
-from telethon.tl.types import MessageReactions, ReactionCount, ReactionEmoji, ReactionCustomEmoji, MessageReplies  # noqa: E501
-from telethon.tl.types import Document, DocumentAttributeCustomEmoji
-from telethon import functions
 
 sys.path.insert(0, os.getcwd())
-from utils.channel_helpers import get_peer_id, get_compact_name  # noqa: E402
+from utils.channel_helpers import get_compact_name, get_peer_id
 
-load_dotenv(dotenv_path=Path('./env/config.env'))
+load_dotenv(dotenv_path=Path("./env/config.env"))
 
 
 def get_dialog_id(message: Message) -> int:
@@ -24,10 +30,12 @@ def get_dialog_id(message: Message) -> int:
 
 
 # TODO: cache requests
-async def get_document_info(client: TelegramClient, document_id: int) -> Document:  # noqa: E501
-    document = await client(functions.messages.GetCustomEmojiDocumentsRequest(
-        document_id=[document_id]
-    ))
+async def get_document_info(
+    client: TelegramClient, document_id: int
+) -> Document:  # noqa: E501
+    document = await client(
+        functions.messages.GetCustomEmojiDocumentsRequest(document_id=[document_id])
+    )
     return document[0]
 
 
@@ -44,7 +52,9 @@ async def get_reaction_type(reaction_obj: ReactionCount) -> str:
         return str(reaction_obj.reaction.document_id)
 
 
-async def unwrap_reactions(msg_reactions: MessageReactions | None) -> dict[str, int]:  # noqa: E501
+async def unwrap_reactions(
+    msg_reactions: MessageReactions | None,
+) -> dict[str, int]:  # noqa: E501
     reactions = {}
     if msg_reactions is None:
         return reactions
@@ -57,7 +67,7 @@ async def unwrap_reactions(msg_reactions: MessageReactions | None) -> dict[str, 
 
 async def get_reply_count(replies_obj: MessageReplies | None) -> int:
     if replies_obj is None:
-        # print('None replies')
+        # print("None replies")
         return 0
     else:
         return replies_obj.replies
@@ -68,6 +78,7 @@ class CompactMessage(TypedDict, total=False):
     More compact representation of a message.
     Only stores the attributes we actually need.
     """
+
     msg_id: int
     chat_id: int
     msg: str
@@ -84,35 +95,33 @@ class CompactMessage(TypedDict, total=False):
 
 
 class MessageBuilder:
-    def __init__(
-        self,
-        new_msg: Message,
-        chats: Optional[list[dict]] = None
-    ) -> None:
+    def __init__(self, new_msg: Message, chats: Optional[list[dict]] = None) -> None:
         self.new_msg = new_msg
         self.message = CompactMessage()
         if chats:
-            self.chats = {chat['id']: chat for chat in chats}
+            self.chats = {chat["id"]: chat for chat in chats}
 
     def extract_text(self) -> Self:
-        self.message['msg_id'] = self.new_msg.id
-        self.message['chat_id'] = get_dialog_id(self.new_msg)
-        self.message['msg'] = self.new_msg.message
-        self.message['date'] = self.new_msg.date
+        self.message["msg_id"] = self.new_msg.id
+        self.message["chat_id"] = get_dialog_id(self.new_msg)
+        self.message["msg"] = self.new_msg.message
+        self.message["date"] = self.new_msg.date
         return self
 
     def extract_dialog_name(self) -> Self:
-        chat_name = get_compact_name(self.chats.get(self.message['chat_id']))
-        chat_title = self.chats.get(self.message['chat_id']).get('title')
-        self.message['chat_name'] = chat_name
-        self.message['chat_title'] = chat_title
+        chat_name = get_compact_name(self.chats.get(self.message["chat_id"]))
+        chat_title = self.chats.get(self.message["chat_id"]).get("title")
+        self.message["chat_name"] = chat_name
+        self.message["chat_title"] = chat_title
         return self
 
     async def extract_engagements(self) -> Coroutine:
-        self.message['views'] = self.new_msg.views
-        self.message['forwards'] = self.new_msg.forwards
-        self.message['replies'] = await get_reply_count(self.new_msg.replies)
-        self.message['reactions'] = await unwrap_reactions(self.new_msg.reactions)  # noqa: E501
+        self.message["views"] = self.new_msg.views
+        self.message["forwards"] = self.new_msg.forwards
+        self.message["replies"] = await get_reply_count(self.new_msg.replies)
+        self.message["reactions"] = await unwrap_reactions(
+            self.new_msg.reactions
+        )  # noqa: E501
         return self
 
     def extract_forwards(self) -> Self:
@@ -120,7 +129,7 @@ class MessageBuilder:
         if forwarded_from_peer is not None:
             peer_id = get_peer_id(forwarded_from_peer.from_id)
             if peer_id is not None:
-                self.message['fwd_from'] = peer_id
+                self.message["fwd_from"] = peer_id
         return self
 
     async def build(self) -> Coroutine:

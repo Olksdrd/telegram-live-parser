@@ -2,9 +2,16 @@ from datetime import datetime
 from typing import Optional, Self, TypedDict
 
 from telethon import TelegramClient
-from telethon.tl.types import PeerChannel, PeerChat, PeerUser, ChatFull, UserFull, TypePeer  # noqa: F401, E501
-from telethon.functions import channels, users, messages
 from telethon.errors.rpcerrorlist import ChatIdInvalidError
+from telethon.functions import channels, messages, users
+from telethon.tl.types import (
+    ChatFull,
+    PeerChannel,
+    PeerChat,
+    PeerUser,
+    TypePeer,
+    UserFull,
+)
 
 
 class CompactChannel(TypedDict, total=False):
@@ -14,7 +21,7 @@ class CompactChannel(TypedDict, total=False):
     description: str
     participants_count: int
     creation_date: datetime
-    chats: list[int]  # can get into a periodic cycle if followed -> use lookup table  # noqa: E501
+    chats: list[int]  # can get into a periodic cycle if followed -> use lookup table
 
     @classmethod
     def build_from_api(cls, response: ChatFull) -> Self:
@@ -25,7 +32,7 @@ class CompactChannel(TypedDict, total=False):
             description=response.full_chat.about,
             participants_count=response.full_chat.participants_count,
             creation_date=response.chats[0].date,
-            chats=[chat.id for chat in response.chats[1:]]
+            chats=[chat.id for chat in response.chats[1:]],
         )
 
 
@@ -49,7 +56,7 @@ class CompactChat(TypedDict, total=False):
             # participants_count=response.chats[0].participants_count,
             creation_date=response.chats[0].date,
             link=response.full_chat.exported_invite.link,
-            parent_channel=response.chats[0].migrated_to.channel_id
+            parent_channel=response.chats[0].migrated_to.channel_id,
         )
 
 
@@ -69,7 +76,7 @@ class CompactUser(TypedDict, total=False):
             first_name=response.users[0].first_name,
             last_name=response.users[0].last_name,
             phone=response.users[0].phone,
-            description=response.full_user.about
+            description=response.full_user.about,
         )
 
 
@@ -77,9 +84,9 @@ TypeCompact = CompactChannel | CompactChat | CompactUser
 
 
 def get_compact_name(dialog: TypeCompact) -> str:
-    name = dialog.get('title')
+    name = dialog.get("title")
     if name is None:
-        name = dialog.get('username')
+        name = dialog.get("username")
     return name
 
 
@@ -94,43 +101,31 @@ def get_peer_id(peer: TypePeer) -> int | None:
         return None
 
 
-async def get_channel_info(
-    client: TelegramClient,
-    peer: TypePeer
-) -> PeerChannel:
+async def get_channel_info(client: TelegramClient, peer: TypePeer) -> PeerChannel:
     try:
         return await client(channels.GetFullChannelRequest(peer))
     except (ValueError, TypeError):
-        print(f'{peer} not found.')
+        print(f"{peer} not found.")
         return None
 
 
-async def get_user_info(
-    client: TelegramClient,
-    peer: TypePeer
-) -> PeerUser:
+async def get_user_info(client: TelegramClient, peer: TypePeer) -> PeerUser:
     try:
         return await client(users.GetFullUserRequest(peer))
     except ValueError:
-        print(f'{peer} not found.')
+        print(f"{peer} not found.")
         return None
 
 
-async def get_chat_info(
-    client: TelegramClient,
-    peer: TypePeer
-) -> PeerChat:
+async def get_chat_info(client: TelegramClient, peer: TypePeer) -> PeerChat:
     try:
         return await client(messages.GetFullChatRequest(peer))
     except ChatIdInvalidError:
-        print(f'{peer} not found.')
+        print(f"{peer} not found.")
         return None
 
 
-async def entitity_info_request(
-    client: TelegramClient,
-    peer: TypePeer
-) -> TypeCompact:
+async def entitity_info_request(client: TelegramClient, peer: TypePeer) -> TypeCompact:
     if isinstance(peer, PeerChannel):
         res = await get_channel_info(client, peer)
         if res is not None:
