@@ -9,7 +9,7 @@ from telethon import TelegramClient
 from telethon.tl.types import Chat
 
 sys.path.insert(0, os.getcwd())
-from utils.channel_helpers import CompactChannel, CompactChat, CompactUser  # noqa: E402, E501
+from utils.channel_helpers import CompactChannel, CompactChat, CompactUser, TypeCompact  # noqa: E402, E501
 
 
 def configure() -> dict[str, int]:
@@ -21,20 +21,7 @@ def configure() -> dict[str, int]:
     return keys
 
 
-def get_all_dialogs(client: TelegramClient) -> dict[str, int]:
-    return {dialog.name: dialog.entity.id
-            for dialog in client.iter_dialogs()}
-
-
-def main() -> None:
-    keys = configure()
-
-    client = TelegramClient(
-        keys['session_name'],
-        keys['api_id'],
-        keys['api_hash'])
-    client.start()
-
+def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
     dialogs = client.iter_dialogs()
 
     dialogs_to_parse = []
@@ -46,7 +33,6 @@ def main() -> None:
                 title=dialog.entity.title,
                 participants_count=dialog.entity.participants_count,
                 creation_date=dialog.entity.date,
-                chats=dialog.entity.forum,
             )
         elif dialog.is_user:
             compact_dialog = CompactUser(
@@ -70,6 +56,21 @@ def main() -> None:
         if compact_dialog:
             dialogs_to_parse.append(
                 {k: v for k, v in compact_dialog.items() if v is not None})
+
+    return dialogs_to_parse
+
+
+def main() -> None:
+    keys = configure()
+
+    client = TelegramClient(
+        keys['session_name'],
+        keys['api_id'],
+        keys['api_hash']
+    )
+    client.start()
+
+    dialogs_to_parse = get_subscriptions_list(client)
 
     with open(os.getenv('CHANNEL_LIST_FILE'), 'w') as f:
         json.dump(
