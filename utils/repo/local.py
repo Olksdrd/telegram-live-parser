@@ -23,29 +23,29 @@ class LocalRepository:
         pass
 
     def put_one(self, object: CompactMessage) -> str:
+        doc = {k: v for k, v in object.items() if v}
         with open(self.path, mode="r+") as file:
             try:
                 file.seek(0, 2)
                 position = file.tell() - 1
                 file.seek(position)
                 file.write(',{}]'.format(json.dumps(
-                    object,
+                    doc,
                     default=str,
                     ensure_ascii=False
                 )))
             except ValueError:
                 file.write('[{}]'.format(json.dumps(
-                    object,
+                    doc,
                     default=str,
                     ensure_ascii=False
                 )))
         return '-' * 40
 
     def put_many(self, objects: list[CompactMessage]) -> str:
-        if os.path.exists(self.path):
-            raise Exception(f'{self.path} already exists!')
+        docs = [{k: v for k, v in doc.items() if v} for doc in objects]
         with open(self.path, 'w') as f:
-            json.dump(objects, f, default=str, ensure_ascii=False)
+            json.dump(docs, f, default=str, ensure_ascii=False)
         return '-' * 40
 
     # def get(self, id: str) -> T:

@@ -15,11 +15,13 @@ class CLIRepository:
         pass
 
     def put_one(self, object: CompactMessage) -> str:
-        print(json.dumps(object, default=str, ensure_ascii=False))
+        doc = {k: v for k, v in object.items() if v}
+        print(json.dumps(doc, default=str, ensure_ascii=False))
         return '-' * 40
 
     def put_many(self, objects: list[CompactMessage]) -> str:
-        print(json.dumps(objects, default=str, ensure_ascii=False))
+        docs = [{k: v for k, v in doc.items() if v} for doc in objects]
+        print(json.dumps(docs, default=str, ensure_ascii=False))
         return '-' * 40
 
     # def get(self, id: str) -> T:
