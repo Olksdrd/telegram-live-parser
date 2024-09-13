@@ -1,17 +1,13 @@
 from enum import StrEnum
 import importlib
-import os
-from typing import Protocol
-
-from dotenv import load_dotenv
-
-load_dotenv('./env/config.env')
+from typing import Optional, Protocol
 
 
 class RepositoryType(StrEnum):
     MONGODB = 'mongodb'
     DYNAMODB = 'dynamodb'
     LOCAL_STORAGE = 'local'
+    CLI = 'cli'
 
 
 class Repository[T](Protocol):
@@ -35,7 +31,7 @@ class Repository[T](Protocol):
     def put_one(self, object: T) -> str:
         ...
 
-    # def put_many(self, objects: list[T]) -> str:
+    def put_many(self, objects: list[T]) -> str:
         ...
 
     # def get(self, id: str) -> T:
@@ -45,28 +41,35 @@ class Repository[T](Protocol):
         ...
 
 
-def repository_factory(repo_type: str = '') -> Repository:
-    if repo_type == '':
-        repo_type = os.getenv('REPOSITORY_TYPE')
+def repository_factory(
+    repo_type: str,
+    table_name: Optional[str] = 'cli',
+    collection_name: Optional[str] = None,
+    user: Optional[str] = None,
+    passwd: Optional[str] = None,
+    ip: Optional[str] = None,
+    port: Optional[str | int] = None
+) -> Repository:
 
     # ! repo in Enum should have the same name as the corresponding .py file
     repo = importlib.import_module(f'utils.repo.{repo_type}')
 
     if repo_type == RepositoryType.MONGODB:
         return repo.MongoRepository(
-            table_name=os.getenv('TABLE_NAME'),
-            collection_name=os.getenv('COLLECTION_NAME'),
-            user=os.getenv('DB_USER'),
-            passwd=os.getenv('DB_PASSWD'),
-            ip=os.getenv('DB_IP'),
-            port=int(os.getenv('DB_PORT'))
+            table_name=table_name,
+            collection_name=collection_name,
+            user=user,
+            passwd=passwd,
+            ip=ip,
+            port=port
         )
     elif repo_type == RepositoryType.DYNAMODB:
         return repo.DynamoRepository(
-            table_name=os.getenv('TABLE_NAME'),
-            region=os.getenv('AWS_REGION')
+            table_name=table_name,
         )
+    elif repo_type == RepositoryType.CLI:
+        return repo.CLIRepository()
     elif repo_type == RepositoryType.LOCAL_STORAGE:
-        raise NotImplementedError
+        return repo.LocalRepository(table_name=table_name)
     else:
         raise ValueError
