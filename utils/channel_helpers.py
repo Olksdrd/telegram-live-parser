@@ -76,6 +76,13 @@ class CompactUser(TypedDict, total=False):
 TypeCompact = CompactChannel | CompactChat | CompactUser
 
 
+def get_compact_name(dialog: TypeCompact) -> str:
+    name = dialog.get('name')
+    if name is None:
+        name = dialog.get('username')
+    return name
+
+
 def get_peer_id(peer: TypePeer) -> int | None:
     if isinstance(peer, PeerChannel):
         return peer.channel_id
@@ -136,13 +143,3 @@ async def entitity_info_request(
         res = await get_user_info(client, peer)
         if res is not None:
             return CompactUser.build_from_api(res)
-
-
-# async def get_full_entity_info(peer, seen_channels):
-#     peer_id = get_dialog_id(peer)
-#     if peer_id not in seen_channels.keys():
-#         res = await entitity_info_request(client, peer)
-#         seen_channels[peer_id] = res
-#     else:
-#         res = seen_channels[peer_id]
-#     return res

@@ -13,7 +13,7 @@ from telethon.tl.types import Document, DocumentAttributeCustomEmoji
 from telethon import functions
 
 sys.path.insert(0, os.getcwd())
-from utils.channel_helpers import get_peer_id  # noqa: E402
+from utils.channel_helpers import get_peer_id, get_compact_name  # noqa: E402
 
 load_dotenv(dotenv_path=Path('./env/config.env'))
 
@@ -102,10 +102,8 @@ class MessageBuilder:
         return self
 
     def extract_dialog_name(self) -> Self:
-        chat_name = self.chats[self.message['chat_id']].get('name')
-        chat_title = self.chats[self.message['chat_id']].get('title')
-        if chat_name is None:
-            chat_name = self.chats[self.message['chat_id']].get('username')
+        chat_name = get_compact_name(self.chats.get(self.message['chat_id']))
+        chat_title = self.chats.get(self.message['chat_id']).get('title')
         self.message['chat_name'] = chat_name
         self.message['chat_title'] = chat_title
         return self
