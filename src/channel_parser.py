@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 from telethon import TelegramClient
 
 sys.path.insert(0, os.getcwd())
-from utils.channel_helpers import entitity_info_request, get_compact_name  # noqa: E402
+from utils.channel_helpers import entitity_info_request, get_compact_name  # noqa: E402, E501
 from utils.message_helpers import MessageBuilder  # noqa: E402, E501
 from utils.repo.interface import Repository, repository_factory  # noqa: E402, E501
 
@@ -77,11 +77,15 @@ async def amain() -> None:
         user=os.getenv('DB_USER'),
         passwd=os.getenv('DB_PASSWD'),
         ip=os.getenv('DB_IP'),
-        port=int(os.getenv('DB_PORT'))
+        port=os.getenv('DB_PORT')
     )
     repository.connect()
 
-    client = TelegramClient(keys['session_name'], keys['api_id'], keys['api_hash'])
+    client = TelegramClient(
+        keys['session_name'],
+        keys['api_id'],
+        keys['api_hash']
+    )
     client.loop.set_debug(True)
     await client.start()
 

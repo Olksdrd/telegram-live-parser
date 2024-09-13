@@ -4,6 +4,7 @@ import logging
 import os
 from pathlib import Path
 import sys
+from typing import Any
 
 from dotenv import load_dotenv
 from telethon import TelegramClient
@@ -14,7 +15,7 @@ from utils.message_helpers import MessageBuilder  # noqa: E402
 from utils.repo.interface import Repository, repository_factory  # noqa: E402
 
 
-def configure() -> tuple[dict[str, int], list[dict]]:
+def configure() -> tuple[dict[str, Any], list[dict]]:
 
     load_dotenv(dotenv_path=Path('./env/config.env'))
 
@@ -33,7 +34,7 @@ def configure() -> tuple[dict[str, int], list[dict]]:
 
 
 async def live_parser(
-    keys: dict[str, int],
+    keys: dict[str, Any],
     chats: list[dict],
     repository: Repository
 ) -> None:
@@ -90,7 +91,7 @@ def main() -> None:
         user=os.getenv('DB_USER'),
         passwd=os.getenv('DB_PASSWD'),
         ip=os.getenv('DB_IP'),
-        port=int(os.getenv('DB_PORT'))
+        port=os.getenv('DB_PORT')
     )
     logging.info('Connecting to database...')
     repository.connect()
