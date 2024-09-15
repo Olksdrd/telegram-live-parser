@@ -26,20 +26,26 @@ def configure() -> tuple[dict[str, Any], list[dict]]:
     with open(os.getenv("TG_KEYS_FILE"), "r") as f:
         keys = json.load(f)
 
-    with open(os.getenv("CHANNEL_LIST_FILE"), "r") as f:
-        chats = json.load(f)
+    chats_repository = repository_factory(
+        repo_type=os.getenv("CHANNEL_REPO"),
+        table_name=os.getenv("CHANNEL_TABLE"),
+        collection_name=os.getenv("CHANNEL_COLLECTION"),
+        user=os.getenv("DB_USER"),
+        passwd=os.getenv("DB_PASSWD"),
+        ip=os.getenv("DB_IP"),
+        port=os.getenv("DB_PORT"),
+    )
+    chats_repository.connect()
+    chats = chats_repository.get_all()
+    chats_repository.disconnect()
 
     return keys, chats
 
 
 async def live_parser(
-    keys: dict[str, Any], chats: list[dict], repository: Repository
+    tg_client: TelegramClient, chats: list[dict], message_repository: Repository
 ) -> None:
 
-    logging.info("Initializing Telegram Client...")
-    tg_client = TelegramClient(
-        keys["session_name"], keys["api_id"], keys["api_hash"], catch_up=True
-    )
     await tg_client.start()
     logging.info("Telegram Client started.")
 
@@ -57,7 +63,7 @@ async def live_parser(
     )
     async def handler(event: NewMessage.Event) -> None:
         # parse only messages with text, though images may also be of interest
-        if event.message.message != "":  # tbh messages with len 1 are useless
+        if event.message.message != "":  # tbh messages with len 1 are useless too
             builder = (
                 MessageBuilder(event.message, chats=chats)
                 .extract_text()
@@ -66,7 +72,7 @@ async def live_parser(
             )
             document = await builder.build()
 
-            response = repository.put_one(document)
+            response = message_repository.put_one(document)
             logging.info(
                 f'Added message {document["msg_id"]} '
                 f'from chat {document["chat_id"]}. ' + response
@@ -79,24 +85,29 @@ def main() -> None:
 
     keys, chats = configure()
 
-    repository = repository_factory(
-        repo_type=os.getenv("REPOSITORY_TYPE"),
-        table_name=os.getenv("TABLE_NAME"),
-        collection_name=os.getenv("COLLECTION_NAME"),
+    message_repository = repository_factory(
+        repo_type=os.getenv("MESSAGE_REPO"),
+        table_name=os.getenv("MESSAGE_TABLE"),
+        collection_name=os.getenv("MESSAGE_COLLECTION"),
         user=os.getenv("DB_USER"),
         passwd=os.getenv("DB_PASSWD"),
         ip=os.getenv("DB_IP"),
         port=os.getenv("DB_PORT"),
     )
     logging.info("Connecting to database...")
-    repository.connect()
+    message_repository.connect()
     logging.info("Connection established.")
+
+    logging.info("Initializing Telegram Client...")
+    tg_client = TelegramClient(
+        keys["session_name"], keys["api_id"], keys["api_hash"], catch_up=True
+    )
 
     # handle SIGINT without an error message from asyncio
     try:
-        asyncio.run(live_parser(keys, chats, repository))
+        asyncio.run(live_parser(tg_client, chats, message_repository))
     except KeyboardInterrupt:
-        repository.disconnect()
+        message_repository.disconnect()
         pass  # TelegramClient connection autocloses on SIGINT
 
 

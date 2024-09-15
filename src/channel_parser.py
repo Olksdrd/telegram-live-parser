@@ -10,11 +10,7 @@ from telethon import TelegramClient
 from telethon.tl.types import TypeInputPeer
 
 sys.path.insert(0, os.getcwd())
-from utils.channel_helpers import (
-    TypeCompact,
-    entitity_info_request,
-    get_compact_name,
-)
+from utils.channel_helpers import TypeCompact, entitity_info_request, get_compact_name
 from utils.message_helpers import MessageBuilder
 from utils.repo.interface import Repository, repository_factory
 
@@ -30,8 +26,18 @@ def configure() -> tuple[dict[str, Any], list[dict]]:
     with open(os.getenv("TG_KEYS_FILE"), "r") as f:
         keys = json.load(f)
 
-    with open(os.getenv("CHANNEL_LIST_FILE"), "r") as f:
-        chats = json.load(f)
+    chats_repository = repository_factory(
+        repo_type=os.getenv("CHANNEL_REPO"),
+        table_name=os.getenv("CHANNEL_TABLE"),
+        collection_name=os.getenv("CHANNEL_COLLECTION"),
+        user=os.getenv("DB_USER"),
+        passwd=os.getenv("DB_PASSWD"),
+        ip=os.getenv("DB_IP"),
+        port=os.getenv("DB_PORT"),
+    )
+    chats_repository.connect()
+    chats = chats_repository.get_all()
+    chats_repository.disconnect()
 
     return keys, chats
 
@@ -48,7 +54,7 @@ async def get_dialog(
 
 async def parse_channel(
     client: TelegramClient,
-    repository: Repository,
+    message_repository: Repository,
     dialog: dict[TypeCompact],
 ) -> None:
     if not client.is_connected():
@@ -72,9 +78,9 @@ async def parse_channel(
         doc = await builder.build()
 
         docs.append(doc)
-        repository.put_one(doc)
+        # message_repository.put_one(doc)
 
-    # repository.put_many(docs)
+    message_repository.put_many(docs)
     logging.info(f"{len(docs)} messages retreived.")
 
 
@@ -82,16 +88,18 @@ async def amain() -> None:
 
     keys, dialogs = configure()
 
-    repository = repository_factory(
-        repo_type=os.getenv("REPOSITORY_TYPE"),
-        table_name=os.getenv("TABLE_NAME"),
-        collection_name=os.getenv("COLLECTION_NAME"),
+    message_repository = repository_factory(
+        repo_type=os.getenv("MESSAGE_REPO"),
+        table_name=os.getenv("MESSAGE_TABLE"),
+        collection_name=os.getenv("MESSAGE_COLLECTION"),
         user=os.getenv("DB_USER"),
         passwd=os.getenv("DB_PASSWD"),
         ip=os.getenv("DB_IP"),
         port=os.getenv("DB_PORT"),
     )
-    repository.connect()
+    logging.info("Connecting to database...")
+    message_repository.connect()
+    logging.info("Connection established.")
 
     logging.info("Initializing Telegram Client...")
     client = TelegramClient(
@@ -106,9 +114,9 @@ async def amain() -> None:
 
     # not the most effective async :(
     for dialog in dialogs:
-        await parse_channel(client, repository, dialog)
+        await parse_channel(client, message_repository, dialog)
 
-    repository.disconnect()
+    message_repository.disconnect()
 
 
 if __name__ == "__main__":

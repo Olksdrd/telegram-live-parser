@@ -31,8 +31,8 @@ class Repository[T](Protocol):
     # def get(self, id: str) -> T:
     #     pass
 
-    # def get_all(self) -> list[T]:
-    #     pass
+    def get_all(self) -> list[T]:
+        pass
 
 
 class RepositoryType(StrEnum):

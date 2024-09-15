@@ -52,3 +52,8 @@ class MongoRepository:
         docs = [self._convert_message_to_document(msg) for msg in messages]
         response = self.collection.insert_many(docs)
         return f"Inserted {len(messages)} objects. {response}"
+
+    def get_all(self) -> list[Mapping]:
+        objects_list = list(self.collection.find())
+
+        return objects_list

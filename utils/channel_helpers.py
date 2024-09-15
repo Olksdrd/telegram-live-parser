@@ -4,14 +4,9 @@ from typing import Optional, Self, TypedDict
 from telethon import TelegramClient
 from telethon.errors.rpcerrorlist import ChatIdInvalidError
 from telethon.functions import channels, messages, users
-from telethon.tl.types import (
-    ChatFull,
-    PeerChannel,
-    PeerChat,
-    PeerUser,
-    TypePeer,
-    UserFull,
-)
+from telethon.tl.types import PeerChannel, PeerChat, PeerUser, TypePeer
+from telethon.tl.types.messages import ChatFull
+from telethon.tl.types.users import UserFull
 
 
 class CompactChannel(TypedDict, total=False):
@@ -41,7 +36,7 @@ class CompactChat(TypedDict, total=False):
     # name: str
     title: str
     description: str
-    # participants_count: int  # 0? misleading?
+    # participants_count: int  # always 0?
     creation_date: datetime
     link: str
     parent_channel: int
@@ -62,7 +57,7 @@ class CompactChat(TypedDict, total=False):
 
 class CompactUser(TypedDict, total=False):
     id: int
-    username: str
+    username: Optional[str]
     first_name: Optional[str]
     last_name: Optional[str]
     phone: Optional[str]
@@ -83,7 +78,8 @@ class CompactUser(TypedDict, total=False):
 TypeCompact = CompactChannel | CompactChat | CompactUser
 
 
-def get_compact_name(dialog: TypeCompact) -> str:
+def get_compact_name(dialog: TypeCompact) -> str | None:
+    """Just get some recognizable name to display in logs instead of id"""
     name = dialog.get("title")
     if name is None:
         name = dialog.get("username")
@@ -91,17 +87,22 @@ def get_compact_name(dialog: TypeCompact) -> str:
 
 
 def get_peer_id(peer: TypePeer) -> int | None:
-    if isinstance(peer, PeerChannel):
+    """Why haven't they just called the attribute 'id'?"""
+    if hasattr(peer, "channel_id"):
         return peer.channel_id
-    elif isinstance(peer, PeerChat):
+    elif hasattr(peer, "chat_id"):
         return peer.chat_id
-    elif isinstance(peer, PeerUser):
+    elif hasattr(peer, "user_id"):
         return peer.user_id
     else:
+        # TODO: handle it more nicely outside a function
+        print(f"Unknown peer type {type(peer)}: {peer}")
         return None
 
 
-async def get_channel_info(client: TelegramClient, peer: TypePeer) -> PeerChannel:
+# These 3 functions just send a request to a server to get *all* the info about Channel/Chat/User
+# These requests are slow, so it's better to cache results or use lookup table first
+async def get_channel_info(client: TelegramClient, peer: TypePeer) -> ChatFull | None:
     try:
         return await client(channels.GetFullChannelRequest(peer))
     except (ValueError, TypeError):
@@ -109,7 +110,7 @@ async def get_channel_info(client: TelegramClient, peer: TypePeer) -> PeerChanne
         return None
 
 
-async def get_user_info(client: TelegramClient, peer: TypePeer) -> PeerUser:
+async def get_user_info(client: TelegramClient, peer: TypePeer) -> UserFull | None:
     try:
         return await client(users.GetFullUserRequest(peer))
     except ValueError:
@@ -117,7 +118,7 @@ async def get_user_info(client: TelegramClient, peer: TypePeer) -> PeerUser:
         return None
 
 
-async def get_chat_info(client: TelegramClient, peer: TypePeer) -> PeerChat:
+async def get_chat_info(client: TelegramClient, peer: TypePeer) -> ChatFull | None:
     try:
         return await client(messages.GetFullChatRequest(peer))
     except ChatIdInvalidError:

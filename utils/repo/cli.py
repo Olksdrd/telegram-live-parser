@@ -28,5 +28,6 @@ class CliRepository:
     # def get(self, id: str) -> T:
     #     pass
 
-    # def get_all(self) -> list[T]:
-    #     pass
+    def get_all(self) -> list[Mapping]:
+        # ? read from STDIN?
+        raise Exception("How is it supposed to work?")

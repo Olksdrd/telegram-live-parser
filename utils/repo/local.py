@@ -43,5 +43,8 @@ class LocalRepository:
     # def get(self, id: str) -> T:
     #     pass
 
-    # def get_all(self) -> list[T]:
-    #     pass
+    def get_all(self) -> list[Mapping]:
+        with open(self.path, "r") as f:
+            objects_list = json.load(f)
+
+        return objects_list
