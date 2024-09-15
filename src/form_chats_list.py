@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 import sys
 from pathlib import Path
@@ -9,12 +10,13 @@ from telethon import TelegramClient
 from telethon.tl.types import Channel, Chat
 
 sys.path.insert(0, os.getcwd())
+from configs.logging import init_logging
 from utils.channel_helpers import CompactChannel, CompactChat, CompactUser, TypeCompact
 from utils.repo.interface import repository_factory
 
 
 def configure() -> tuple[dict[str, int], list[str]]:
-    load_dotenv(dotenv_path=Path("./env/config.env"))
+    load_dotenv(dotenv_path=Path("./configs/config.env"))
 
     with open(os.getenv("TG_KEYS_FILE"), "r") as f:
         keys = json.load(f)
@@ -26,6 +28,7 @@ def configure() -> tuple[dict[str, int], list[str]]:
 
 
 async def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
+    logger.info("Iterating over subscriptions list...")
     dialogs = client.iter_dialogs()
 
     dialogs_to_parse = []
@@ -62,6 +65,7 @@ async def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
                 {key: val for key, val in compact_dialog.items() if val is not None}
             )
 
+    logger.info(f"{len(dialogs_to_parse)} dialogs added.")
     return dialogs_to_parse
 
 
@@ -81,12 +85,14 @@ async def get_channel_by_name(
             creation_date=channel.date,
         )
     except ValueError:
-        print(f"Channel '{name}' not found.")
+        logger.warning(f"Channel '{name}' not found.")
 
 
 async def get_non_subscription_channels(
     client: TelegramClient, non_subscribed_channels: list[str]
 ) -> list[TypeCompact]:
+    logger.info("Adding additional public channels...")
+
     dialogs_to_parse = []
     for channel_name in non_subscribed_channels:
         channel = await get_channel_by_name(client, name=channel_name)
@@ -107,10 +113,14 @@ async def amain() -> None:
         ip=os.getenv("DB_IP"),
         port=os.getenv("DB_PORT"),
     )
+    logger.info("Connecting to database...")
     repository.connect()
+    logger.info("Connection established.")
 
+    logger.info("Initializing Telegram Client...")
     client = TelegramClient(keys["session_name"], keys["api_id"], keys["api_hash"])
     await client.start()
+    logger.info("Telegram Client started.")
 
     dialogs_to_parse = []
     if os.getenv("PARSE_SUBSRIPTIONS") == "yes":
@@ -121,10 +131,12 @@ async def amain() -> None:
     )
 
     repository.put_many(dialogs_to_parse)
-    print(f"Info for {len(dialogs_to_parse)} chats saved.")
+    logger.info(f"Info for {len(dialogs_to_parse)} chats saved.")
 
     repository.disconnect()
 
 
 if __name__ == "__main__":
+    init_logging()
+    logger = logging.getLogger(__name__)
     asyncio.run(amain())

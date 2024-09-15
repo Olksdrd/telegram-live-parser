@@ -1,13 +1,15 @@
+# directories
+env/
+
+# configurations, cache etc
+__pycache__/
+*key*
+*.json
+*.env
+*.pyc
+
 # files
 *.session*
 *.ipynb
 test*
-
-# configurations
-__pycache__/
-*keys*.json
-*.json
-*.env
-
-# directories
-env/
+*.log*

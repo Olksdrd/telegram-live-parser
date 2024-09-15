@@ -11,21 +11,19 @@ from telethon import TelegramClient
 from telethon.events import NewMessage
 
 sys.path.insert(0, os.getcwd())
+from configs.logging import init_logging
 from utils.message_helpers import MessageBuilder
 from utils.repo.interface import Repository, repository_factory
 
 
 def configure() -> tuple[dict[str, Any], list[dict]]:
 
-    load_dotenv(dotenv_path=Path("./env/config.env"))
-
-    logging.basicConfig(
-        level=logging.INFO, format="%(asctime)s [%(levelname)s]: %(message)s"
-    )
+    load_dotenv(dotenv_path=Path("./configs/config.env"))
 
     with open(os.getenv("TG_KEYS_FILE"), "r") as f:
         keys = json.load(f)
 
+    logger.info("Fetching channels list...")
     chats_repository = repository_factory(
         repo_type=os.getenv("CHANNEL_REPO"),
         table_name=os.getenv("CHANNEL_TABLE"),
@@ -38,6 +36,7 @@ def configure() -> tuple[dict[str, Any], list[dict]]:
     chats_repository.connect()
     chats = chats_repository.get_all()
     chats_repository.disconnect()
+    logger.info("Channels list loaded.")
 
     return keys, chats
 
@@ -47,9 +46,9 @@ async def live_parser(
 ) -> None:
 
     await tg_client.start()
-    logging.info("Telegram Client started.")
+    logger.info("Telegram Client started.")
 
-    logging.info(f"Parsing data from {len(chats)} chats...")
+    logger.info(f"Parsing data from {len(chats)} chats...")
 
     chat_ids = [chat["id"] for chat in chats]
 
@@ -73,7 +72,7 @@ async def live_parser(
             document = await builder.build()
 
             response = message_repository.put_one(document)
-            logging.info(
+            logger.info(
                 f'Added message {document["msg_id"]} '
                 f'from chat {document["chat_id"]}. ' + response
             )
@@ -94,11 +93,11 @@ def main() -> None:
         ip=os.getenv("DB_IP"),
         port=os.getenv("DB_PORT"),
     )
-    logging.info("Connecting to database...")
+    logger.info("Connecting to database...")
     message_repository.connect()
-    logging.info("Connection established.")
+    logger.info("Connection established.")
 
-    logging.info("Initializing Telegram Client...")
+    logger.info("Initializing Telegram Client...")
     tg_client = TelegramClient(
         keys["session_name"], keys["api_id"], keys["api_hash"], catch_up=True
     )
@@ -112,4 +111,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
+    init_logging()
+    logger = logging.getLogger(__name__)
+
     main()

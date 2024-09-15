@@ -21,7 +21,7 @@ from telethon.utils import resolve_id
 sys.path.insert(0, os.getcwd())
 from utils.channel_helpers import get_compact_name, get_peer_id
 
-load_dotenv(dotenv_path=Path("./env/config.env"))
+load_dotenv(dotenv_path=Path("./configs/config.env"))
 
 
 def get_dialog_id(message: Message) -> int:
@@ -67,7 +67,6 @@ async def unwrap_reactions(
 
 async def get_reply_count(replies_obj: MessageReplies | None) -> int:
     if replies_obj is None:
-        # print("None replies")
         return 0
     else:
         return replies_obj.replies
@@ -119,9 +118,7 @@ class MessageBuilder:
         self.message["views"] = self.new_msg.views
         self.message["forwards"] = self.new_msg.forwards
         self.message["replies"] = await get_reply_count(self.new_msg.replies)
-        self.message["reactions"] = await unwrap_reactions(
-            self.new_msg.reactions
-        )  # noqa: E501
+        self.message["reactions"] = await unwrap_reactions(self.new_msg.reactions)
         return self
 
     def extract_forwards(self) -> Self:
