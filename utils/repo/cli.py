@@ -1,6 +1,5 @@
 import json
-
-from utils.message_helpers import CompactMessage
+from collections.abc import Mapping
 
 
 class CliRepository:
@@ -16,12 +15,12 @@ class CliRepository:
     def disconnect(self) -> None:
         pass
 
-    def put_one(self, object: CompactMessage) -> str:
+    def put_one(self, object: Mapping) -> str:
         doc = {k: v for k, v in object.items() if v}
         print(json.dumps(doc, default=str, ensure_ascii=False))
         return "-" * 40
 
-    def put_many(self, objects: list[CompactMessage]) -> str:
+    def put_many(self, objects: list[Mapping]) -> str:
         docs = [{k: v for k, v in doc.items() if v} for doc in objects]
         print(json.dumps(docs, default=str, ensure_ascii=False))
         return "-" * 40

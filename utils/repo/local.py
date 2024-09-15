@@ -1,8 +1,7 @@
 import json
 import os
+from collections.abc import Mapping
 from typing import Optional
-
-from utils.message_helpers import CompactMessage
 
 
 class LocalRepository:
@@ -19,7 +18,7 @@ class LocalRepository:
     def disconnect(self) -> None:
         pass
 
-    def put_one(self, object: CompactMessage) -> str:
+    def put_one(self, object: Mapping) -> str:
         doc = {k: v for k, v in object.items() if v}
         with open(self.path, mode="r+") as file:
             try:
@@ -35,7 +34,7 @@ class LocalRepository:
                 )
         return "-" * 40
 
-    def put_many(self, objects: list[CompactMessage]) -> str:
+    def put_many(self, objects: list[Mapping]) -> str:
         docs = [{k: v for k, v in doc.items() if v} for doc in objects]
         with open(self.path, "w") as f:
             json.dump(docs, f, default=str, ensure_ascii=False)

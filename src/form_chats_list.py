@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import sys
@@ -5,31 +6,30 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from telethon import TelegramClient
-from telethon.tl.types import Chat
+from telethon.tl.types import Channel, Chat
 
 sys.path.insert(0, os.getcwd())
-from utils.channel_helpers import (
-    CompactChannel,
-    CompactChat,
-    CompactUser,
-    TypeCompact,
-)
+from utils.channel_helpers import CompactChannel, CompactChat, CompactUser, TypeCompact
+from utils.repo.interface import repository_factory
 
 
-def configure() -> dict[str, int]:
+def configure() -> tuple[dict[str, int], list[str]]:
     load_dotenv(dotenv_path=Path("./env/config.env"))
 
     with open(os.getenv("TG_KEYS_FILE"), "r") as f:
         keys = json.load(f)
 
-    return keys
+    with open(os.getenv("NON_SUBBED_CHANNELS_LIST"), "r") as f:
+        non_subscribed_channels = json.load(f)
+
+    return keys, non_subscribed_channels
 
 
-def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
+async def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
     dialogs = client.iter_dialogs()
 
     dialogs_to_parse = []
-    for dialog in dialogs:
+    async for dialog in dialogs:
         if dialog.is_channel:
             compact_dialog = CompactChannel(
                 id=dialog.entity.id,
@@ -59,28 +59,72 @@ def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
 
         if compact_dialog:
             dialogs_to_parse.append(
-                {k: v for k, v in compact_dialog.items() if v is not None}
+                {key: val for key, val in compact_dialog.items() if val is not None}
             )
 
     return dialogs_to_parse
 
 
-def main() -> None:
-    keys = configure()
+async def get_channel_by_name(
+    client: TelegramClient, name: str
+) -> CompactChannel | None:
+    if not client.is_connected():
+        await client.connect()
+
+    try:
+        channel: Channel = await client.get_entity(name)
+        return CompactChannel(
+            id=channel.id,
+            name=channel.username,
+            title=channel.title,
+            participants_count=channel.participants_count,
+            creation_date=channel.date,
+        )
+    except ValueError:
+        print(f"Channel '{name}' not found.")
+
+
+async def get_non_subscription_channels(
+    client: TelegramClient, non_subscribed_channels: list[str]
+) -> list[TypeCompact]:
+    dialogs_to_parse = []
+    for channel_name in non_subscribed_channels:
+        channel = await get_channel_by_name(client, name=channel_name)
+        dialogs_to_parse.append(channel)
+
+    return dialogs_to_parse
+
+
+async def amain() -> None:
+    keys, non_subscribed_channels = configure()
+
+    repository = repository_factory(
+        repo_type=os.getenv("CHANNEL_REPO"),
+        table_name=os.getenv("CHANNEL_TABLE"),
+        collection_name=os.getenv("CHANNEL_COLLECTION"),
+        user=os.getenv("DB_USER"),
+        passwd=os.getenv("DB_PASSWD"),
+        ip=os.getenv("DB_IP"),
+        port=os.getenv("DB_PORT"),
+    )
+    repository.connect()
 
     client = TelegramClient(keys["session_name"], keys["api_id"], keys["api_hash"])
-    client.start()
+    await client.start()
 
-    dialogs_to_parse = get_subscriptions_list(client)
+    dialogs_to_parse = []
+    if os.getenv("PARSE_SUBSRIPTIONS") == "yes":
+        dialogs_to_parse = await get_subscriptions_list(client)
 
-    with open(os.getenv("CHANNEL_LIST_FILE"), "w") as f:
-        json.dump(obj=dialogs_to_parse, fp=f, indent=4, ensure_ascii=False, default=str)
-
-    print(
-        f"Info for {len(dialogs_to_parse)} chats saved to "
-        f'{os.getenv("CHANNEL_LIST_FILE")}'
+    dialogs_to_parse += await get_non_subscription_channels(
+        client, non_subscribed_channels
     )
+
+    repository.put_many(dialogs_to_parse)
+    print(f"Info for {len(dialogs_to_parse)} chats saved.")
+
+    repository.disconnect()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(amain())

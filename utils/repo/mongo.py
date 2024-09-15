@@ -1,7 +1,7 @@
+from collections.abc import Mapping
+
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
-
-from utils.message_helpers import CompactMessage
 
 
 class MongoRepository:
@@ -40,15 +40,15 @@ class MongoRepository:
     def disconnect(self) -> None:
         self.client.close()
 
-    def _convert_message_to_document(self, message: CompactMessage) -> dict:
+    def _convert_message_to_document(self, message: Mapping) -> dict:
         return {key: val for key, val in message.items() if val}
 
-    def put_one(self, message: CompactMessage) -> str:
+    def put_one(self, message: Mapping) -> str:
         document = self._convert_message_to_document(message)
         response = self.collection.insert_one(document)
         return f"Record ID: {response.inserted_id}."
 
-    def put_many(self, messages: list[CompactMessage]) -> str:
+    def put_many(self, messages: list[Mapping]) -> str:
         docs = [self._convert_message_to_document(msg) for msg in messages]
         response = self.collection.insert_many(docs)
         return f"Inserted {len(messages)} objects. {response}"
