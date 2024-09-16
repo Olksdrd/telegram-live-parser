@@ -11,10 +11,7 @@ Parsers for Telegram.
 .
 ├── compose.yml
 ├── configs
-│   ├── config.env
 │   ├── logging.py
-│   ├── mongo.env
-│   ├── mongo-express.env
 │   ├── public-channels.json
 │   └── tg-keys.json
 ├── dashboard
@@ -29,22 +26,29 @@ Parsers for Telegram.
 │       ├── dynamodb.py
 │       ├── fetch_data.py
 │       └── mongodb.py
+├── env
+│   ├── config.env
+│   ├── mongo.env
+│   └── mongo-express.env
 ├── README.md
 ├── requirements.txt
 ├── src
 │   ├── channel_parser.py
 │   ├── crawler.py
 │   ├── form_chats_list.py
-│   └── live_parser.py
+│   ├── live_parser.py
+│   └── ParserDockerfile
 └── utils
     ├── channel_helpers.py
     ├── message_helpers.py
-    └── repo
-        ├── cli.py
-        ├── dynamo.py
-        ├── interface.py
-        ├── local.py
-        └──  mongo.py
+    ├── repo
+    │   ├── cli.py
+    │   ├── dynamo.py
+    │   ├── interface.py
+    │   ├── local.py
+    │   └── mongo.py
+    └── tg_helpers.py
+
 ```
 
 
@@ -57,15 +61,15 @@ Configure Python envronment from `requirements.txt` in a preferred way.
 (Fully dockerized version coming later.)
 
 ### Launch a database
-1. Setup the environment by creating the following `.env` files:
+1. Setup the environment by creating the following `.env` files (it's better to add them as secrets in swarm):
 
- - `./configs/mongo.env`
+ - `./env/mongo.env`
 ```
 MONGO_INITDB_ROOT_USERNAME=root
 MONGO_INITDB_ROOT_PASSWORD=example
 ```
 
- - (optional) `./configs/mongo-express.env`
+ - (optional) `./env/mongo-express.env`
 ```
 ME_CONFIG_MONGODB_ADMINUSERNAME=root
 ME_CONFIG_MONGODB_ADMINPASSWORD=example
@@ -78,7 +82,7 @@ ME_CONFIG_BASICAUTH=false
 
 ### Configure Parser
 
-1. Create an `./configs/config.env` file
+1. Create an `./env/config.env` file
 ```
 MESSAGE_REPO=mongo (use "local" to save to json or "cli" to just print them to STDOUT)
 MESSAGE_TABLE=messages
@@ -99,7 +103,7 @@ TG_KEYS_FILE=./configs/tg-keys.json
 LOG_CONFIG=./configs/log_config.json
 ```
 2. Setup a telegram account and subscribe it to the channels and chats you want to parse.
-2. Get your telegram API keys (for that specific account) from https://my.telegram.org/ and put them into `./configs/tg-keys.json` file
+2. Get your telegram API keys (for that specific account) from https://my.telegram.org/ and put them into `./configs/tg-keys.json` file (move them to secrets too)
 ```
 {
     "api_id": <id>,
@@ -124,7 +128,7 @@ LOG_CONFIG=./configs/log_config.json
 
 ### Using Parsers
 
-Launch live parser `python src/live_parser.py`. It will use already existing session file to login without confirmation code.
+Launch live parser `python src/live_parser.py` or `docker compose up -d --build parser`. It will use already existing session file to login without confirmation code.
 
 Alternatively, parse channel history with `python src/channel_parser.py`. It has multiple ways to specify number of posts to parse in `iter_messages()`:
 - `limit=n` to parse last $n$ posts from each channel
