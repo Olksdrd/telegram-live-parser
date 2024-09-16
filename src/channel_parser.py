@@ -14,6 +14,7 @@ from configs.logging import init_logging
 from utils.channel_helpers import TypeCompact, entitity_info_request
 from utils.message_helpers import MessageBuilder
 from utils.repo.interface import Repository, repository_factory
+from utils.tg_helpers import get_telethon_session
 
 
 def configure() -> tuple[dict[str, Any], list[dict]]:
@@ -100,9 +101,17 @@ async def amain() -> None:
     message_repository.connect()
     logger.info("Connection established.")
 
+    session = get_telethon_session(
+        db=keys["session_name"],
+        user=os.getenv("DB_USER"),
+        passwd=os.getenv("DB_PASSWD"),
+        ip=os.getenv("DB_IP"),
+        port=os.getenv("DB_PORT"),
+    )
+
     logger.info("Initializing Telegram Client...")
     client = TelegramClient(
-        keys["session_name"],
+        session,
         keys["api_id"],
         keys["api_hash"],
     )

@@ -13,6 +13,7 @@ sys.path.insert(0, os.getcwd())
 from configs.logging import init_logging
 from utils.channel_helpers import CompactChannel, CompactChat, CompactUser, TypeCompact
 from utils.repo.interface import repository_factory
+from utils.tg_helpers import get_telethon_session
 
 
 def configure() -> tuple[dict[str, int], list[str]]:
@@ -117,8 +118,16 @@ async def amain() -> None:
     repository.connect()
     logger.info("Connection established.")
 
+    session = get_telethon_session(
+        db=keys["session_name"],
+        user=os.getenv("DB_USER"),
+        passwd=os.getenv("DB_PASSWD"),
+        ip=os.getenv("DB_IP"),
+        port=os.getenv("DB_PORT"),
+    )
+
     logger.info("Initializing Telegram Client...")
-    client = TelegramClient(keys["session_name"], keys["api_id"], keys["api_hash"])
+    client = TelegramClient(session, keys["api_id"], keys["api_hash"])
     await client.start()
     logger.info("Telegram Client started.")
 
