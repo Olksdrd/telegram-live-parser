@@ -21,7 +21,7 @@ from telethon.utils import resolve_id
 sys.path.insert(0, os.getcwd())
 from utils.channel_helpers import get_compact_name, get_peer_id
 
-load_dotenv(dotenv_path=Path("./configs/config.env"))
+load_dotenv(dotenv_path=Path("./env/config.env"))
 
 
 def get_dialog_id(message: Message) -> int:
