@@ -1,3 +1,8 @@
+"""
+Use to save messages to json locally and then pipe them into jq.
+Useful for investigating parsing results and looking for edge cases.
+"""
+
 import json
 import os
 from collections.abc import Mapping

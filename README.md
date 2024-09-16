@@ -1,6 +1,6 @@
 # Project Description
 
-Live parser for channels and chats to which you're subscribed to on Telegram.
+Parsers for Telegram.
 
 > [!NOTE]
 > Project is under development!
@@ -10,31 +10,45 @@ Live parser for channels and chats to which you're subscribed to on Telegram.
 ```
 .
 ├── compose.yml
+├── configs
+│   ├── config.env
+│   ├── logging.py
+│   ├── mongo.env
+│   ├── mongo-express.env
+│   ├── public-channels.json
+│   └── tg-keys.json
 ├── dashboard
 │   ├── app.py
 │   ├── DashboardDockerfile
 │   ├── pages
 │   │   ├── table.py
 │   │   └── trend.py
-│   └── requirements.txt
-├── env
-│   ├── config.env
-│   ├── mongo.env
-│   └── mongo-express.env
+│   ├── requirements_dynamo.txt
+│   ├── requirements.txt
+│   └── utils
+│       ├── dynamodb.py
+│       ├── fetch_data.py
+│       └── mongodb.py
 ├── README.md
 ├── requirements.txt
 ├── src
+│   ├── channel_parser.py
+│   ├── crawler.py
 │   ├── form_chats_list.py
 │   └── live_parser.py
-├── tg-keys.json
 └── utils
-    ├── chats_to_parse.json
-    ├── db_helpers.py
-    └── parser_helpers.py
+    ├── channel_helpers.py
+    ├── message_helpers.py
+    └── repo
+        ├── cli.py
+        ├── dynamo.py
+        ├── interface.py
+        ├── local.py
+        └──  mongo.py
 ```
 
 
-# Running the Project
+# Local Deployment
 
 ### Python environment
 
@@ -45,13 +59,13 @@ Configure Python envronment from `requirements.txt` in a preferred way.
 ### Launch a database
 1. Setup the environment by creating the following `.env` files:
 
- - `./env/mongo.env`
+ - `./configs/mongo.env`
 ```
 MONGO_INITDB_ROOT_USERNAME=root
 MONGO_INITDB_ROOT_PASSWORD=example
 ```
 
- - (optional) `./env/mongo-express.env`
+ - (optional) `./configs/mongo-express.env`
 ```
 ME_CONFIG_MONGODB_ADMINUSERNAME=root
 ME_CONFIG_MONGODB_ADMINPASSWORD=example
@@ -64,20 +78,28 @@ ME_CONFIG_BASICAUTH=false
 
 ### Configure Parser
 
-1. Create an `./env/config.env` file
+1. Create an `./configs/config.env` file
 ```
+MESSAGE_REPO=mongo (use "local" to save to json or "cli" to just print them to STDOUT)
+MESSAGE_TABLE=messages
+MESSAGE_COLLECTION=test_batch
+
+CHANNEL_REPO=mongo ("local" to save to a json file)
+CHANNEL_TABLE=channels
+CHANNEL_COLLECTION=parsing_list
+PARSE_SUBSRIPTIONS=yes
+NON_SUBBED_CHANNELS_LIST=./configs/public-channels.json
+
 DB_USER=root
 DB_PASSWD=example
-DB_IP=<mongo-container-ip>
+DB_IP=172.20.0.2
 DB_PORT=27017
-TABLE_NAME=messages
-COLLECTION_NAME=test_sample2
 
-TG_KEYS_FILE=./tg-keys.json
-CHANNEL_LIST_FILE=./utils/chats_to_parse.json
+TG_KEYS_FILE=./configs/tg-keys.json
+LOG_CONFIG=./configs/log_config.json
 ```
 2. Setup a telegram account and subscribe it to the channels and chats you want to parse.
-2. Get your telegram API keys (for that specific account) from https://my.telegram.org/ and put them into `./tg-keys.json` file
+2. Get your telegram API keys (for that specific account) from https://my.telegram.org/ and put them into `./configs/tg-keys.json` file
 ```
 {
     "api_id": <id>,
@@ -85,14 +107,30 @@ CHANNEL_LIST_FILE=./utils/chats_to_parse.json
     "session_name": "parser",
 }
 ```
-4. Run `python src/form_chats_list.py` to auto generate a list with IDs of *all* the channels and chats that you are subscribed to.
+4. Run `python src/form_chats_list.py` to auto generate a list of channels to parse:
 - (optional) before running the script, create a chat with yourself. Then it will be much easier to test the script and database connection.
+- if `PARSE_SUBSRIPTIONS=yes` it will add all the subscriptions (including private chats) to parsing list.
+- if you want to parse some public channels without subscribing, add their names (the ones that are used in t.me/channel_name urls, not titles!) to `NON_SUBBED_CHANNELS_LIST`. This option is useless for live parser, since it gets triggered by events on your account (no subscription -> no event in case of a new post)
+```
+[
+    "channelname"
+]
+```
 - During this first connection attempt you'll be asked to enter a confirmation code.
-- Authentication will be saved in the `<session_name>.session` file and as long as that file persists you shouldn't be prompted to enter the code again (at least I hope so).
+- Authentication will be saved in the `<session_name>.session` file (SQLite database) and as long as it persists you shouldn't be prompted to enter the code again (at least I hope so).
 - You can also login with bot token (`tg_client.start(bot_token=)`), but iterating over dialogs don't work with it. I think you can still use bot token in the parser itself (step 6), but at this point there is no benefit.
 - Maybe try disabling 2FA and login with you phone and password directly to avoid confirmation code on first login `tg_client.start(phone=, password=)`.
-5. If you don't want to parse all of you subscriptions, just delete corresponding chats from `./utils/chats_to_parse.json`.
-6. Launch the parser `python src/live_parser.py`. It will use already existing session file to login without confirmation code.
+5. If you don't want to parse all of you subscriptions, just delete corresponding chats from the list.
+
+### Using Parsers
+
+Launch live parser `python src/live_parser.py`. It will use already existing session file to login without confirmation code.
+
+Alternatively, parse channel history with `python src/channel_parser.py`. It has multiple ways to specify number of posts to parse in `iter_messages()`:
+- `limit=n` to parse last $n$ posts from each channel
+- by post id ranges: `max_id` and `min_id`
+- from specific `offset_date` up until now (note that you can't *directly* specify a range between two arbitrary dates)
+- filter posts by some criteria
 
 ### Dashboard
 

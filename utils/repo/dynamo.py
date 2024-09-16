@@ -1,3 +1,5 @@
+"""NOTE: it wasn't updated in a long time and is currently broken"""
+
 from collections.abc import Mapping
 
 import boto3

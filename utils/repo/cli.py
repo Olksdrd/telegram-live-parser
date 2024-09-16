@@ -1,3 +1,5 @@
+"""Good for printing a dozen of messages to STDOUT for quick testing"""
+
 import json
 from collections.abc import Mapping
 

@@ -1,3 +1,5 @@
+"""Interface for saving channels or messages to MondoDB"""
+
 from collections.abc import Mapping
 
 from pymongo import MongoClient
