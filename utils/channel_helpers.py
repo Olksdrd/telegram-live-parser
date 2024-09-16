@@ -79,8 +79,7 @@ TypeCompact = CompactChannel | CompactChat | CompactUser
 
 
 def get_compact_name(dialog: TypeCompact) -> str | None:
-    """Just get some recognizable name to display in logs instead of id"""
-    name = dialog.get("title")
+    name = dialog.get("name")
     if name is None:
         name = dialog.get("username")
     return name

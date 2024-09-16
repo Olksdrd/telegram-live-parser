@@ -11,7 +11,7 @@ from telethon.tl.types import TypeInputPeer
 
 sys.path.insert(0, os.getcwd())
 from configs.logging import init_logging
-from utils.channel_helpers import TypeCompact, entitity_info_request, get_compact_name
+from utils.channel_helpers import TypeCompact, entitity_info_request
 from utils.message_helpers import MessageBuilder
 from utils.repo.interface import Repository, repository_factory
 
@@ -64,7 +64,7 @@ async def parse_channel(
         logger.warning(f"Couldn't find chat {dialog['id']}. Skipping...")
         return
 
-    logger.info(f"Retreiving data from {get_compact_name(dialog)}.")
+    logger.info(f"Retreiving data from {dialog['id']}.")
 
     docs = []
     async for message in client.iter_messages(chat, limit=2):
