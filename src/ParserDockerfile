@@ -6,11 +6,11 @@ ARG GROUP_ID=1000
 
 WORKDIR /home/$USERNAME
 
-COPY ./dashboard/requirements.txt ./
+COPY ./requirements.txt ./
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY dashboard .
+COPY ./ ./
 
 RUN : \
     && addgroup --gid $GROUP_ID $USERNAME \
@@ -21,8 +21,4 @@ RUN : \
 
 USER $USERNAME
 
-ENV REPOSITORY_TYPE=mongodb
-ENV TABLE_NAME=messages
-ENV COLLECTION_NAME=test_sample3
-
-CMD [ "python", "app.py" ]
+CMD [ "python", "src/live_parser.py" ]

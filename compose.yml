@@ -1,10 +1,29 @@
 services:
 
+  parser:
+    build:
+      context: .
+      dockerfile: ./src/ParserDockerfile
+    container_name: parser
+    stop_signal: SIGINT
+    secrets:
+      - config
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - "no-new-privileges=true"
+    restart: always
+    networks:
+      - parser
+    depends_on:
+      - mongo
+
   mongo:
     image: mongo:jammy
     container_name: mongo
     restart: always
-    env_file: ./configs/mongo.env
+    env_file: ./env/mongo.env
     volumes:
       - mongo-storage:/data/db
     networks:
@@ -16,7 +35,7 @@ services:
     restart: always
     ports:
       - 8081:8081
-    env_file: ./configs/mongo-express.env
+    env_file: ./env/mongo-express.env
     networks:
       - parser
     depends_on:
@@ -29,6 +48,8 @@ services:
     container_name: dashboard
     stop_signal: SIGINT
     read_only: true
+    secrets:
+      - config
     cap_drop:
       - ALL
     security_opt:
@@ -49,3 +70,7 @@ networks:
     name: parser
     driver: bridge
     external: false
+
+secrets:
+  config:
+    file: ./env/config.env

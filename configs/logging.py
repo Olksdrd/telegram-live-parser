@@ -42,17 +42,17 @@ log_config = {
             "level": "WARNING",
             "stream": "ext://sys.stderr",
         },
-        "file": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "formatter": "detailed",
-            "level": "INFO",
-            "filename": "configs/logfile.log",
-            "maxBytes": 10_000_000,  # 10 Mb
-            "backupCount": 5,
-        },
+        # "file": {
+        #     "class": "logging.handlers.RotatingFileHandler",
+        #     "formatter": "detailed",
+        #     "level": "INFO",
+        #     "filename": "configs/logfile.log",
+        #     "maxBytes": 10_000_000,  # 10 Mb
+        #     "backupCount": 5,
+        # },
         "queue_handler": {  # needs Python>=3.12
             "class": "logging.handlers.QueueHandler",
-            "handlers": ["file", "stdout", "stderr"],
+            "handlers": ["stdout", "stderr"],
             "respect_handler_level": True,
         },
     },

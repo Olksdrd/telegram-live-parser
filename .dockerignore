@@ -1,0 +1,10 @@
+# files
+*.session
+*.md
+*.env
+
+# directories
+dashboard/
+notebooks/
+.git/
+env/

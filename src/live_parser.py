@@ -19,7 +19,7 @@ from utils.tg_helpers import get_telethon_session
 
 def configure() -> tuple[dict[str, Any], list[dict]]:
 
-    load_dotenv(dotenv_path=Path("./configs/config.env"))
+    load_dotenv(dotenv_path=Path("/run/secrets/config"))
 
     with open(os.getenv("TG_KEYS_FILE"), "r") as f:
         keys = json.load(f)
