@@ -4,9 +4,12 @@ Useful for investigating parsing results and looking for edge cases.
 """
 
 import json
+import logging
 import os
 from collections.abc import Mapping
 from typing import Optional
+
+logger = logging.getLogger(__name__)
 
 
 class LocalRepository:
@@ -14,14 +17,16 @@ class LocalRepository:
         self.path = f"./{table_name}.json"
 
     def connect(self) -> None:
+        logger.info("Connecting to database...")
         if not os.path.exists(self.path):
             os.mknod(self.path)
+        logger.info("Connection established.")
 
     def _is_connected(self) -> bool:
         pass
 
     def disconnect(self) -> None:
-        pass
+        logger.info("Database connection closed.")
 
     def put_one(self, object: Mapping) -> str:
         doc = {k: v for k, v in object.items() if v}

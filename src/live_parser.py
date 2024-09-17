@@ -94,9 +94,7 @@ def main() -> None:
         ip=os.getenv("DB_IP"),
         port=os.getenv("DB_PORT"),
     )
-    logger.info("Connecting to database...")
     message_repository.connect()
-    logger.info("Connection established.")
 
     session = get_telethon_session(
         db=keys["session_name"],
@@ -107,9 +105,7 @@ def main() -> None:
     )
 
     logger.info("Initializing Telegram Client...")
-    tg_client = TelegramClient(
-        session, keys["api_id"], keys["api_hash"], catch_up=True
-    )
+    tg_client = TelegramClient(session, keys["api_id"], keys["api_hash"], catch_up=True)
 
     # handle SIGINT without an error message from asyncio
     try:

@@ -97,9 +97,7 @@ async def amain() -> None:
         ip=os.getenv("DB_IP"),
         port=os.getenv("DB_PORT"),
     )
-    logger.info("Connecting to database...")
     message_repository.connect()
-    logger.info("Connection established.")
 
     session = get_telethon_session(
         db=keys["session_name"],

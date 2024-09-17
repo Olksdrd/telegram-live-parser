@@ -1,8 +1,11 @@
 """NOTE: it wasn't updated in a long time and is currently broken"""
 
+import logging
 from collections.abc import Mapping
 
 import boto3
+
+logger = logging.getLogger(__name__)
 
 
 class DynamoRepository:
@@ -11,7 +14,9 @@ class DynamoRepository:
         self.table_name = table_name
 
     def connect(self) -> None:
+        logger.info("Connecting to database...")
         self.client = boto3.client("dynamodb", region_name=self.region)
+        logger.info("Connection established.")
 
     def _is_connected(self) -> bool:
         pass

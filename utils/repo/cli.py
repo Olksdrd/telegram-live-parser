@@ -1,7 +1,10 @@
 """Good for printing a dozen of messages to STDOUT for quick testing"""
 
 import json
+import logging
 from collections.abc import Mapping
+
+logger = logging.getLogger(__name__)
 
 
 class CliRepository:
@@ -9,13 +12,14 @@ class CliRepository:
         pass
 
     def connect(self) -> None:
-        pass
+        logger.info("Connecting to database...")
+        logger.info("Connection established.")
 
     def _is_connected(self) -> bool:
         pass
 
     def disconnect(self) -> None:
-        pass
+        logger.info("Database connection closed.")
 
     def put_one(self, object: Mapping) -> str:
         doc = {k: v for k, v in object.items() if v}
