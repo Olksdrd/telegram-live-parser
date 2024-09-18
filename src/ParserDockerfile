@@ -21,4 +21,7 @@ RUN : \
 
 USER $USERNAME
 
-CMD [ "python", "src/live_parser.py" ]
+ENV CONFIG_PATH=/run/secrets/config
+ENV PARSER=live
+
+CMD python "$(echo src/$PARSER)_parser.py"

@@ -19,7 +19,7 @@ from utils.tg_helpers import get_telethon_session
 
 def configure() -> tuple[dict[str, Any], list[dict]]:
 
-    load_dotenv(dotenv_path=Path("/run/secrets/config"))
+    load_dotenv(dotenv_path=Path(os.getenv("CONFIG_PATH")))
 
     with open(os.getenv("TG_KEYS_FILE"), "r") as f:
         keys = json.load(f)
@@ -111,8 +111,9 @@ def main() -> None:
     try:
         asyncio.run(live_parser(tg_client, chats, message_repository))
     except KeyboardInterrupt:
-        message_repository.disconnect()
         pass  # TelegramClient connection autocloses on SIGINT
+    finally:
+        message_repository.disconnect()
 
 
 if __name__ == "__main__":

@@ -102,8 +102,9 @@ DB_PORT=27017
 TG_KEYS_FILE=./configs/tg-keys.json
 LOG_CONFIG=./configs/log_config.json
 ```
-2. Setup a telegram account and subscribe it to the channels and chats you want to parse.
-2. Get your telegram API keys (for that specific account) from https://my.telegram.org/ and put them into `./configs/tg-keys.json` file (move them to secrets too)
+2. To run parsers locally (not in a container) run `export CONFIG_PATH=./env/config.env`.
+3. Setup a telegram account and subscribe it to the channels and chats you want to parse.
+4. Get your telegram API keys (for that specific account) from https://my.telegram.org/ and put them into `./configs/tg-keys.json` file (move them to secrets too)
 ```
 {
     "api_id": <id>,
@@ -111,7 +112,7 @@ LOG_CONFIG=./configs/log_config.json
     "session_name": "parser",
 }
 ```
-4. Run `python src/form_chats_list.py` to auto generate a list of channels to parse:
+5. Run `python src/form_chats_list.py` to auto generate a list of channels to parse:
 - (optional) before running the script, create a chat with yourself. Then it will be much easier to test the script and database connection.
 - if `PARSE_SUBSRIPTIONS=yes` it will add all the subscriptions (including private chats) to parsing list.
 - if you want to parse some public channels without subscribing, add their names (the ones that are used in t.me/channel_name urls, not titles!) to `NON_SUBBED_CHANNELS_LIST`. This option is useless for live parser, since it gets triggered by events on your account (no subscription -> no event in case of a new post)
@@ -124,11 +125,11 @@ LOG_CONFIG=./configs/log_config.json
 - Authentication will be saved in the `<session_name>.session` file (SQLite database) and as long as it persists you shouldn't be prompted to enter the code again (at least I hope so).
 - You can also login with bot token (`tg_client.start(bot_token=)`), but iterating over dialogs don't work with it. I think you can still use bot token in the parser itself (step 6), but at this point there is no benefit.
 - Maybe try disabling 2FA and login with you phone and password directly to avoid confirmation code on first login `tg_client.start(phone=, password=)`.
-5. If you don't want to parse all of you subscriptions, just delete corresponding chats from the list.
+6. If you don't want to parse all of you subscriptions, just delete corresponding chats from the list.
 
 ### Using Parsers
 
-Launch live parser `python src/live_parser.py` or `docker compose up -d --build parser`. It will use already existing session file to login without confirmation code.
+Launch live parser `python src/live_parser.py` or `docker compose run -e PARSER=[live/channel] parser`. It will use already existing session file to login without confirmation code.
 
 Alternatively, parse channel history with `python src/channel_parser.py`. It has multiple ways to specify number of posts to parse in `iter_messages()`:
 - `limit=n` to parse last $n$ posts from each channel

@@ -1,5 +1,6 @@
 import atexit
 import logging
+import os
 from logging.config import dictConfig
 from typing import override
 
@@ -11,6 +12,43 @@ class InfoFilter(logging.Filter):
     @override
     def filter(self, record: logging.LogRecord) -> bool | logging.LogRecord:
         return record.levelno <= logging.INFO
+
+
+handlers_list = ["stdout", "stderr", "file"]
+
+handlers = {
+    "stdout": {
+        "class": "logging.StreamHandler",
+        "formatter": "standard",
+        "level": "INFO",
+        "stream": "ext://sys.stdout",
+        "filters": ["info"],
+    },
+    "stderr": {
+        "class": "logging.StreamHandler",
+        "formatter": "standard",
+        "level": "WARNING",
+        "stream": "ext://sys.stderr",
+    },
+    "file": {
+        "class": "logging.handlers.RotatingFileHandler",
+        "formatter": "detailed",
+        "level": "DEBUG",
+        "filename": "configs/logfile.log",
+        "maxBytes": 10_000_000,  # 10 Mb
+        "backupCount": 5,
+    },
+    "queue_handler": {  # needs Python>=3.12
+        "class": "logging.handlers.QueueHandler",
+        "handlers": handlers_list,
+        "respect_handler_level": True,
+    },
+}
+
+if os.getenv("HOME") == "/home/docker":
+    print('inside if')
+    handlers.pop("file")
+    handlers_list.remove("file")
 
 
 log_config = {
@@ -28,34 +66,7 @@ log_config = {
             "datefmt": "%Y-%m-%dT%H:%M:%S%z",
         },
     },
-    "handlers": {
-        "stdout": {
-            "class": "logging.StreamHandler",
-            "formatter": "standard",
-            "level": "INFO",
-            "stream": "ext://sys.stdout",
-            "filters": ["info"],
-        },
-        "stderr": {
-            "class": "logging.StreamHandler",
-            "formatter": "standard",
-            "level": "WARNING",
-            "stream": "ext://sys.stderr",
-        },
-        # "file": {
-        #     "class": "logging.handlers.RotatingFileHandler",
-        #     "formatter": "detailed",
-        #     "level": "INFO",
-        #     "filename": "configs/logfile.log",
-        #     "maxBytes": 10_000_000,  # 10 Mb
-        #     "backupCount": 5,
-        # },
-        "queue_handler": {  # needs Python>=3.12
-            "class": "logging.handlers.QueueHandler",
-            "handlers": ["stdout", "stderr"],
-            "respect_handler_level": True,
-        },
-    },
+    "handlers": handlers,
     "loggers": {
         "root": {
             "handlers": ["queue_handler"],
