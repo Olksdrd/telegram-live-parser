@@ -30,9 +30,7 @@ def get_dialog_id(message: Message) -> int:
 
 
 # TODO: cache requests
-async def get_document_info(
-    client: TelegramClient, document_id: int
-) -> Document:  # noqa: E501
+async def get_document_info(client: TelegramClient, document_id: int) -> Document:
     document = await client(
         functions.messages.GetCustomEmojiDocumentsRequest(document_id=[document_id])
     )
@@ -54,7 +52,7 @@ async def get_reaction_type(reaction_obj: ReactionCount) -> str:
 
 async def unwrap_reactions(
     msg_reactions: MessageReactions | None,
-) -> dict[str, int]:  # noqa: E501
+) -> dict[str, int]:
     reactions = {}
     if msg_reactions is None:
         return reactions

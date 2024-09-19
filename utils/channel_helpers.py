@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from typing import Optional, Self, TypedDict
 
@@ -7,6 +8,8 @@ from telethon.functions import channels, messages, users
 from telethon.tl.types import PeerChannel, PeerChat, PeerUser, TypePeer
 from telethon.tl.types.messages import ChatFull
 from telethon.tl.types.users import UserFull
+
+logger = logging.getLogger(__name__)
 
 
 class CompactChannel(TypedDict, total=False):
@@ -95,7 +98,7 @@ def get_peer_id(peer: TypePeer) -> int | None:
         return peer.user_id
     else:
         # TODO: handle it more nicely outside a function
-        print(f"Unknown peer type {type(peer)}: {peer}")
+        logger.error(f"Unknown peer type {type(peer)}: {peer}")
         return None
 
 
@@ -105,7 +108,7 @@ async def get_channel_info(client: TelegramClient, peer: TypePeer) -> ChatFull |
     try:
         return await client(channels.GetFullChannelRequest(peer))
     except (ValueError, TypeError):
-        print(f"{peer} not found.")
+        logger.warning(f"{peer} not found.")
         return None
 
 
@@ -113,7 +116,7 @@ async def get_user_info(client: TelegramClient, peer: TypePeer) -> UserFull | No
     try:
         return await client(users.GetFullUserRequest(peer))
     except ValueError:
-        print(f"{peer} not found.")
+        logger.warning(f"{peer} not found.")
         return None
 
 
@@ -121,7 +124,7 @@ async def get_chat_info(client: TelegramClient, peer: TypePeer) -> ChatFull | No
     try:
         return await client(messages.GetFullChatRequest(peer))
     except ChatIdInvalidError:
-        print(f"{peer} not found.")
+        logger.warning(f"{peer} not found.")
         return None
 
 

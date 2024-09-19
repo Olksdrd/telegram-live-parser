@@ -46,7 +46,7 @@ handlers = {
 }
 
 if os.getenv("HOME") == "/home/docker":
-    print('inside if')
+    print("inside if")
     handlers.pop("file")
     handlers_list.remove("file")
 
