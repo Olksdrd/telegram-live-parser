@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, Self, TypedDict
 
 from telethon import TelegramClient
-from telethon.errors.rpcerrorlist import ChatIdInvalidError
+from telethon.errors.rpcerrorlist import ChatIdInvalidError, ChannelPrivateError
 from telethon.functions import channels, messages, users
 from telethon.tl.types import PeerChannel, PeerChat, PeerUser, TypePeer
 from telethon.tl.types.messages import ChatFull
@@ -109,6 +109,9 @@ async def get_channel_info(client: TelegramClient, peer: TypePeer) -> ChatFull |
         return await client(channels.GetFullChannelRequest(peer))
     except (ValueError, TypeError):
         logger.warning(f"{peer} not found.")
+        return None
+    except ChannelPrivateError:
+        logger.warning(f"{peer} is private.")
         return None
 
 
