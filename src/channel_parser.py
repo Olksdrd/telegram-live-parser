@@ -17,7 +17,7 @@ from utils.repo.interface import Repository, repository_factory
 from utils.tg_helpers import get_telethon_session
 
 
-def configure() -> tuple[dict[str, Any], list[dict]]:
+def configure() -> tuple[dict[str, Any], list[TypeCompact]]:
 
     load_dotenv(os.getenv("CONFIG_PATH"))
 
@@ -55,7 +55,7 @@ async def get_dialog(
 async def parse_channel(
     client: TelegramClient,
     message_repository: Repository,
-    dialog: dict[TypeCompact],
+    dialog: TypeCompact,
 ) -> None:
     if not client.is_connected():
         await client.connect()
