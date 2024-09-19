@@ -3,11 +3,18 @@ from datetime import datetime
 from typing import Optional, Self, TypedDict
 
 from telethon import TelegramClient
-from telethon.errors.rpcerrorlist import ChatIdInvalidError, ChannelPrivateError
+from telethon.errors.rpcerrorlist import ChannelPrivateError, ChatIdInvalidError
 from telethon.functions import channels, messages, users
-from telethon.tl.types import PeerChannel, PeerChat, PeerUser, TypePeer
+from telethon.tl.types import (
+    MessageFwdHeader,
+    PeerChannel,
+    PeerChat,
+    PeerUser,
+    TypePeer,
+)
 from telethon.tl.types.messages import ChatFull
 from telethon.tl.types.users import UserFull
+from telethon.utils import get_peer_id
 
 logger = logging.getLogger(__name__)
 
@@ -88,17 +95,18 @@ def get_compact_name(dialog: TypeCompact) -> str | None:
     return name
 
 
-def get_peer_id(peer: TypePeer) -> int | None:
-    """Why haven't they just called the attribute 'id'?"""
-    if hasattr(peer, "channel_id"):
-        return peer.channel_id
-    elif hasattr(peer, "chat_id"):
-        return peer.chat_id
-    elif hasattr(peer, "user_id"):
-        return peer.user_id
-    else:
-        # TODO: handle it more nicely outside a function
-        logger.error(f"Unknown peer type {type(peer)}: {peer}")
+def get_forward_id(fwd_header: MessageFwdHeader) -> int | None:
+    """
+    Extract id of a peer from which the message was forwaded.
+
+    Sometimes ".from_id: is None, but there is info about user's name in ".from_name" attribute.
+    It's not clear what can be done with it further, so it's skipped for now.
+    """
+    peer = fwd_header.from_id
+    try:
+        return get_peer_id(peer, add_mark=False)
+    except TypeError:
+        logger.warning(f"No peer info. Forwarded from {fwd_header.from_name}")
         return None
 
 
