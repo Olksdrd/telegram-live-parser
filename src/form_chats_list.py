@@ -11,21 +11,19 @@ from telethon.tl.types import Channel, Chat
 
 sys.path.insert(0, os.getcwd())
 from configs.logging import init_logging
+from parser_helpers import get_channel_repo, get_telegram_client
 from utils.channel_helpers import CompactChannel, CompactChat, CompactUser, TypeCompact
-from utils.repo.interface import repository_factory
-from utils.tg_helpers import get_telethon_session
+
+logger = logging.getLogger(__name__)
 
 
-def configure() -> tuple[dict[str, int], list[str]]:
+def configure() -> list[str]:
     load_dotenv(dotenv_path=Path("./env/config.env"))
-
-    with open(os.getenv("TG_KEYS_FILE"), "r") as f:
-        keys = json.load(f)
 
     with open(os.getenv("NON_SUBBED_CHANNELS_LIST"), "r") as f:
         non_subscribed_channels = json.load(f)
 
-    return keys, non_subscribed_channels
+    return non_subscribed_channels
 
 
 async def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
@@ -103,29 +101,12 @@ async def get_non_subscription_channels(
 
 
 async def amain() -> None:
-    keys, non_subscribed_channels = configure()
+    non_subscribed_channels = configure()
 
-    repository = repository_factory(
-        repo_type=os.getenv("CHANNEL_REPO"),
-        table_name=os.getenv("CHANNEL_TABLE"),
-        collection_name=os.getenv("CHANNEL_COLLECTION"),
-        user=os.getenv("DB_USER"),
-        passwd=os.getenv("DB_PASSWD"),
-        ip=os.getenv("DB_IP"),
-        port=os.getenv("DB_PORT"),
-    )
-    repository.connect()
+    repository = get_channel_repo()
 
-    session = get_telethon_session(
-        db=keys["session_name"],
-        user=os.getenv("DB_USER"),
-        passwd=os.getenv("DB_PASSWD"),
-        ip=os.getenv("DB_IP"),
-        port=os.getenv("DB_PORT"),
-    )
+    client = get_telegram_client()
 
-    logger.info("Initializing Telegram Client...")
-    client = TelegramClient(session, keys["api_id"], keys["api_hash"])
     await client.start()
     logger.info("Telegram Client started.")
 
@@ -145,5 +126,5 @@ async def amain() -> None:
 
 if __name__ == "__main__":
     init_logging()
-    logger = logging.getLogger(__name__)
+
     asyncio.run(amain())
