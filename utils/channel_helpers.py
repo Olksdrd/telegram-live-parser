@@ -6,10 +6,13 @@ from telethon import TelegramClient
 from telethon.errors.rpcerrorlist import ChannelPrivateError, ChatIdInvalidError
 from telethon.functions import channels, messages, users
 from telethon.tl.types import (
+    Channel,
+    Chat,
     MessageFwdHeader,
     PeerChannel,
     PeerChat,
     PeerUser,
+    TypeInputPeer,
     TypePeer,
 )
 from telethon.tl.types.messages import ChatFull
@@ -99,7 +102,7 @@ def get_forward_id(fwd_header: MessageFwdHeader) -> int | None:
     """
     Extract id of a peer from which the message was forwaded.
 
-    Sometimes ".from_id: is None, but there is info about user's name in ".from_name" attribute.
+    Sometimes ".from_id" is None, but there is info about user's name in ".from_name" attribute.
     It's not clear what can be done with it further, so it's skipped for now.
     """
     peer = fwd_header.from_id
@@ -139,7 +142,9 @@ async def get_chat_info(client: TelegramClient, peer: TypePeer) -> ChatFull | No
         return None
 
 
-async def entitity_info_request(client: TelegramClient, peer: TypePeer) -> TypeCompact:
+async def peer_info_request(
+    client: TelegramClient, peer: TypePeer
+) -> TypeCompact | None:
     if isinstance(peer, PeerChannel):
         res = await get_channel_info(client, peer)
         if res is not None:
@@ -152,3 +157,87 @@ async def entitity_info_request(client: TelegramClient, peer: TypePeer) -> TypeC
         res = await get_user_info(client, peer)
         if res is not None:
             return CompactUser.build_from_api(res)
+
+
+async def get_peer_by_id(
+    client: TelegramClient, dialog: TypeCompact
+) -> TypeCompact | TypeInputPeer | None:
+    try:
+        chat = await client.get_input_entity(dialog["id"])
+    except ValueError:
+        chat = await peer_info_request(client, dialog)
+    return chat
+
+
+async def get_channel_info_by_name(
+    client: TelegramClient, name: str
+) -> CompactChannel | None:
+    if not client.is_connected():
+        await client.connect()
+
+    try:
+        channel: Channel = await client.get_entity(name)
+        return CompactChannel(
+            id=channel.id,
+            name=channel.username,
+            title=channel.title,
+            participants_count=channel.participants_count,
+            creation_date=channel.date,
+        )
+    except ValueError:
+        logger.warning(f"Channel '{name}' not found.")
+
+
+async def get_non_subscription_channels(
+    client: TelegramClient, non_subscribed_channels: list[str]
+) -> list[TypeCompact]:
+    logger.info("Adding additional public channels...")
+
+    dialogs_to_parse = []
+    for channel_name in non_subscribed_channels:
+        channel = await get_channel_info_by_name(client, name=channel_name)
+        dialogs_to_parse.append(channel)
+
+    return dialogs_to_parse
+
+
+async def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
+    logger.info("Iterating over subscriptions list...")
+    dialogs = client.iter_dialogs()
+
+    dialogs_to_parse = []
+    async for dialog in dialogs:
+        if dialog.is_channel:
+            compact_dialog = CompactChannel(
+                id=dialog.entity.id,
+                name=dialog.entity.username,
+                title=dialog.entity.title,
+                participants_count=dialog.entity.participants_count,
+                creation_date=dialog.entity.date,
+            )
+        elif dialog.is_user:
+            compact_dialog = CompactUser(
+                id=dialog.entity.id,
+                username=dialog.entity.username,
+                first_name=dialog.entity.first_name,
+                last_name=dialog.entity.last_name,
+            )
+        elif isinstance(dialog.entity, Chat):
+            parent_peer = dialog.entity.migrated_to
+            compact_dialog = CompactChat(
+                id=dialog.entity.id,
+                title=dialog.entity.title,
+                creation_date=dialog.entity.date,
+                parent_channel=parent_peer.channel_id if parent_peer else None,
+            )
+        else:
+            # ignore ChatForbidden and megagroups for now
+            pass
+
+        if compact_dialog:
+            dialogs_to_parse.append(
+                {key: val for key, val in compact_dialog.items() if val is not None}
+            )
+
+    logger.info(f"{len(dialogs_to_parse)} dialogs added.")
+    return dialogs_to_parse

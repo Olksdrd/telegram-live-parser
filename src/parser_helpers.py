@@ -13,6 +13,8 @@ from utils.tg_helpers import get_telethon_session
 
 logger = logging.getLogger(__name__)
 
+load_dotenv(dotenv_path=Path(os.getenv("CONFIG_PATH")))
+
 
 def get_message_repo() -> Repository:
 
@@ -47,8 +49,6 @@ def get_channel_repo() -> Repository:
 
 
 def get_chats_to_parse() -> list[TypeCompact]:
-
-    load_dotenv(dotenv_path=Path(os.getenv("CONFIG_PATH")))
 
     logger.info("Fetching channels list...")
     chats_repository = get_channel_repo()

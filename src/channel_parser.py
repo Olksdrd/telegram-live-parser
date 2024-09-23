@@ -4,26 +4,15 @@ import os
 import sys
 
 from telethon import TelegramClient
-from telethon.tl.types import TypeInputPeer
 
 sys.path.insert(0, os.getcwd())
 from configs.logging import init_logging
 from parser_helpers import get_chats_to_parse, get_message_repo, get_telegram_client
-from utils.channel_helpers import TypeCompact, entitity_info_request
+from utils.channel_helpers import TypeCompact, get_peer_by_id
 from utils.message_helpers import MessageBuilder
 from utils.repo.interface import Repository
 
 logger = logging.getLogger(__name__)
-
-
-async def get_dialog(
-    client: TelegramClient, dialog: TypeCompact
-) -> TypeCompact | TypeInputPeer | None:
-    try:
-        chat = await client.get_input_entity(dialog["id"])
-    except ValueError:
-        chat = await entitity_info_request(client, dialog)
-    return chat
 
 
 async def parse_channel(
@@ -34,7 +23,7 @@ async def parse_channel(
     if not client.is_connected():
         await client.connect()
 
-    chat = await get_dialog(client, dialog)
+    chat = await get_peer_by_id(client, dialog)
     if chat is None:
         logger.warning(f"Couldn't find chat {dialog['id']}. Skipping...")
         return
