@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, Self, TypedDict
 
 from telethon import TelegramClient
-from telethon.errors.rpcerrorlist import ChannelPrivateError, ChatIdInvalidError
+from telethon.errors.rpcerrorlist import ChannelPrivateError, ChatIdInvalidError, UsernameInvalidError
 from telethon.functions import channels, messages, users
 from telethon.tl.types import (
     Channel,
@@ -184,7 +184,7 @@ async def get_channel_info_by_name(
             participants_count=channel.participants_count,
             creation_date=channel.date,
         )
-    except ValueError:
+    except (ValueError, UsernameInvalidError):
         logger.warning(f"Channel '{name}' not found.")
 
 
