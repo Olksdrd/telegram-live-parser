@@ -4,18 +4,22 @@ from functools import singledispatch
 from typing import Optional, Self, TypedDict
 
 from telethon import TelegramClient
-from telethon.errors.rpcerrorlist import ChannelPrivateError, ChatIdInvalidError, UsernameInvalidError
+from telethon.errors.rpcerrorlist import (
+    ChannelPrivateError,
+    ChatIdInvalidError,
+    UsernameInvalidError,
+)
 from telethon.functions import channels, messages, users
 from telethon.tl.types import (
     Channel,
     Chat,
-    User,
     MessageFwdHeader,
     PeerChannel,
     PeerChat,
     PeerUser,
     TypeInputPeer,
     TypePeer,
+    User,
 )
 from telethon.tl.types.messages import ChatFull
 from telethon.tl.types.users import UserFull
@@ -185,6 +189,7 @@ async def query_entity_info_by_name(
         logger.warning(f"Entity {name!r} not found.")
     except ChannelPrivateError:
         logger.warning(f"Either {name} is private or you have been banned.")
+        # TODO: return it's id or username?
 
     return get_compact_entity(entity)
 

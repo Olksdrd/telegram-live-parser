@@ -21,7 +21,7 @@ def configure() -> list[str]:
     with open(os.getenv("NON_SUBBED_CHANNELS_LIST"), "r") as f:
         non_subscribed_channels = json.load(f)
 
-    return non_subscribed_channels
+    return list(set(non_subscribed_channels))
 
 
 async def amain() -> None:
@@ -29,7 +29,7 @@ async def amain() -> None:
 
     repository = get_channel_repo()
 
-    client = get_telegram_client(session_type='mongodb')
+    client = get_telegram_client(session_type="mongodb")
 
     await client.start()
     logger.info("Telegram Client started.")
@@ -43,7 +43,9 @@ async def amain() -> None:
     )
 
     repository.put_many(dialogs_to_parse)
-    logger.info(f"Info for {len([dialog for dialog in dialogs_to_parse if dialog])} chats saved.")
+    logger.info(
+        f"Info for {len([dialog for dialog in dialogs_to_parse if dialog])} chats saved."
+    )
 
     repository.disconnect()
 
