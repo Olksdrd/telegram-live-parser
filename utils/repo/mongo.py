@@ -47,7 +47,7 @@ class MongoRepository:
         logger.info("MongoDB connection closed.")
 
     def _convert_message_to_document(self, message: Mapping) -> dict:
-        return {key: val for key, val in message.items() if val}
+        return {str(key): val for key, val in message.items() if val}
 
     def put_one(self, object: Mapping) -> str:
         document = self._convert_message_to_document(object)
