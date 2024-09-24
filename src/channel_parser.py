@@ -31,13 +31,13 @@ async def parse_channel(
     logger.info(f"Retreiving data from {dialog['id']}.")
 
     docs = []
-    async for message in client.iter_messages(chat, limit=2):
+    async for message in client.iter_messages(chat, limit=25, wait_time=2):
 
         # don't chain them since async ones return coroutines and not builders
-        builder = MessageBuilder(message, chats=[dialog]).extract_text()
+        builder = MessageBuilder(message, chats=[dialog], client=client).extract_text()
         builder = builder.extract_dialog_name()
         builder = await builder.extract_engagements()
-        builder = builder.extract_forwards()
+        builder = await builder.extract_forward_info()
         doc = await builder.build()
 
         docs.append(doc)

@@ -16,7 +16,7 @@ from telethon.tl.types import (  # DocumentAttributeCustomEmoji,; ReactionCustom
 from telethon.utils import resolve_id
 
 sys.path.insert(0, os.getcwd())
-from utils.channel_helpers import get_compact_name, get_forward_id
+from utils.channel_helpers import get_compact_name, get_compact_entity
 
 load_dotenv(dotenv_path=Path("./env/config.env"))
 
@@ -137,12 +137,13 @@ class MessageBuilder:
         )
         return self
 
-    def extract_forwards(self) -> Self:
+    async def extract_forward_info(self) -> Coroutine:
         forwarded_from_peer = self.new_msg.fwd_from
         if forwarded_from_peer is not None:
-            peer_id = get_forward_id(forwarded_from_peer)
-            if peer_id is not None:
-                self.message["fwd_from"] = peer_id
+            peer = forwarded_from_peer.from_id
+            dialog = await self.client.get_entity(peer)
+            compact_dialog = get_compact_entity(dialog)
+            self.message["fwd_from"] = {str(key): val for key, val in compact_dialog.items() if val is not None}
         return self
 
     async def build(self) -> Coroutine:

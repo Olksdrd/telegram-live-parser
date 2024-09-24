@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from functools import singledispatch
 from typing import Optional, Self, TypedDict
 
 from telethon import TelegramClient
@@ -8,6 +9,7 @@ from telethon.functions import channels, messages, users
 from telethon.tl.types import (
     Channel,
     Chat,
+    User,
     MessageFwdHeader,
     PeerChannel,
     PeerChat,
@@ -169,36 +171,80 @@ async def get_peer_by_id(
     return chat
 
 
-async def get_channel_info_by_name(
+# functions to get channels/chats/users by (user)name
+async def query_entity_info_by_name(
     client: TelegramClient, name: str
-) -> CompactChannel | None:
+) -> TypeCompact | dict:
     if not client.is_connected():
         await client.connect()
 
+    entity = None
     try:
-        channel: Channel = await client.get_entity(name)
-        return CompactChannel(
-            id=channel.id,
-            name=channel.username,
-            title=channel.title,
-            participants_count=channel.participants_count,
-            creation_date=channel.date,
-        )
+        entity = await client.get_entity(name)
     except (ValueError, UsernameInvalidError):
-        logger.warning(f"Channel '{name}' not found.")
+        logger.warning(f"Entity {name!r} not found.")
+    except ChannelPrivateError:
+        logger.warning(f"Either {name} is private or you have been banned.")
+
+    return get_compact_entity(entity)
 
 
-async def get_non_subscription_channels(
-    client: TelegramClient, non_subscribed_channels: list[str]
+async def get_non_subscription_entities(
+    client: TelegramClient, non_subscribed_entities: list[str]
 ) -> list[TypeCompact]:
-    logger.info("Adding additional public channels...")
+    logger.info("Adding additional entities...")
 
     dialogs_to_parse = []
-    for channel_name in non_subscribed_channels:
-        channel = await get_channel_info_by_name(client, name=channel_name)
-        dialogs_to_parse.append(channel)
+    for entity_name in non_subscribed_entities:
+        entity = await query_entity_info_by_name(client, name=entity_name)
+        dialogs_to_parse.append(entity)
 
     return dialogs_to_parse
+
+
+@singledispatch
+def get_compact_entity(entity) -> dict:
+    # ignore ChatForbidden and megagroups for now
+    logger.warning(f"Unknown type {type(entity)}.")
+    return dict()
+
+
+@get_compact_entity.register
+def _(entity: Channel) -> CompactChannel:
+    compact_dialog = CompactChannel(
+        id=entity.id,
+        name=entity.username,
+        title=entity.title,
+        participants_count=entity.participants_count,
+        creation_date=entity.date,
+    )
+
+    return compact_dialog
+
+
+@get_compact_entity.register
+def _(entity: User) -> CompactUser:
+    compact_dialog = CompactUser(
+        id=entity.id,
+        username=entity.username,
+        first_name=entity.first_name,
+        last_name=entity.last_name,
+    )
+
+    return compact_dialog
+
+
+@get_compact_entity.register
+def _(entity: Chat) -> CompactChat:
+    parent_peer = entity.migrated_to
+    compact_dialog = CompactChat(
+        id=entity.id,
+        title=entity.title,
+        creation_date=entity.date,
+        parent_channel=parent_peer.channel_id if parent_peer else None,
+    )
+
+    return compact_dialog
 
 
 async def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
@@ -207,32 +253,7 @@ async def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
 
     dialogs_to_parse = []
     async for dialog in dialogs:
-        if dialog.is_channel:
-            compact_dialog = CompactChannel(
-                id=dialog.entity.id,
-                name=dialog.entity.username,
-                title=dialog.entity.title,
-                participants_count=dialog.entity.participants_count,
-                creation_date=dialog.entity.date,
-            )
-        elif dialog.is_user:
-            compact_dialog = CompactUser(
-                id=dialog.entity.id,
-                username=dialog.entity.username,
-                first_name=dialog.entity.first_name,
-                last_name=dialog.entity.last_name,
-            )
-        elif isinstance(dialog.entity, Chat):
-            parent_peer = dialog.entity.migrated_to
-            compact_dialog = CompactChat(
-                id=dialog.entity.id,
-                title=dialog.entity.title,
-                creation_date=dialog.entity.date,
-                parent_channel=parent_peer.channel_id if parent_peer else None,
-            )
-        else:
-            # ignore ChatForbidden and megagroups for now
-            pass
+        compact_dialog = get_compact_entity(dialog.entity)
 
         if compact_dialog:
             dialogs_to_parse.append(

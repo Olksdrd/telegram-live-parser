@@ -41,8 +41,8 @@ async def live_parser(
                 MessageBuilder(event.message, chats=chats)
                 .extract_text()
                 .extract_dialog_name()
-                .extract_forwards()
             )
+            builder = await builder.extract_forward_info()
             document = await builder.build()
 
             response = message_repository.put_one(document)
