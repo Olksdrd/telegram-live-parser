@@ -30,6 +30,9 @@ class LocalRepository:
 
     def put_one(self, object: Mapping) -> str:
         doc = {k: v for k, v in object.items() if v}
+        if not doc:
+            logger.warning("Document was empty. Skipping...")
+            return
         with open(self.path, mode="r+") as file:
             try:
                 file.seek(0, 2)
@@ -46,9 +49,13 @@ class LocalRepository:
 
     def put_many(self, objects: list[Mapping]) -> str:
         docs = [{k: v for k, v in doc.items() if v} for doc in objects]
+        non_empty_docs = [doc for doc in docs if doc]
+        if docs != non_empty_docs:
+            num_of_empty_docs = len(docs) - len(non_empty_docs)
+            logger.warning(f"Skipping {num_of_empty_docs} empty documents...")
         with open(self.path, "w") as f:
-            json.dump(docs, f, default=str, ensure_ascii=False)
-        return "-" * 40
+            json.dump(non_empty_docs, f, default=str, ensure_ascii=False)
+        return f"Inserted {len(non_empty_docs)} documents."
 
     # def get(self, id: str) -> T:
     #     pass
