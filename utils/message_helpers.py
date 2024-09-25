@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from datetime import datetime
@@ -19,6 +20,8 @@ sys.path.insert(0, os.getcwd())
 from utils.channel_helpers import get_compact_name, query_entity_info_by_name
 
 load_dotenv(dotenv_path=Path("./env/config.env"))
+
+logger = logging.getLogger(__name__)
 
 
 def get_dialog_id(message: Message) -> int:
@@ -62,7 +65,7 @@ def cache_custom_emoji_requests() -> Callable:
     async def get_custom_emoji_alt(client: TelegramClient, document_id: int) -> str:
         alt = cache.get(document_id)
         if alt is None:
-            print(f"Sending request for custom emoji {document_id}...")
+            logger.debug(f"Sending request for custom emoji {document_id}...")
             doc = await query_document_info(client, document_id)
             alt = extract_custom_emoji_alt(doc)
             cache[document_id] = alt

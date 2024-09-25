@@ -186,11 +186,9 @@ def cache_enitity_requests():
             await client.connect()
 
         compact_entity = cache.get(str(name))
-        if compact_entity is not None:
-            logger.info(f"Used cache for {str(name)}")
 
         if compact_entity is None:
-            logger.info(f"Request for name {str(name)}")
+            logger.debug(f"Request for name {str(name)}")
             entity = None
             try:
                 entity = await client.get_entity(name)
