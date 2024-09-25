@@ -176,22 +176,39 @@ async def get_peer_by_id(
 
 
 # functions to get channels/chats/users by (user)name
-async def query_entity_info_by_name(
-    client: TelegramClient, name: str
-) -> TypeCompact | dict:
-    if not client.is_connected():
-        await client.connect()
+def cache_enitity_requests():
+    cache = {}
 
-    entity = None
-    try:
-        entity = await client.get_entity(name)
-    except (ValueError, UsernameInvalidError):
-        logger.warning(f"Entity {name!r} not found.")
-    except ChannelPrivateError:
-        logger.warning(f"Either {name} is private or you have been banned.")
-        # TODO: return it's id or username?
+    async def query_entity_info_by_name(
+        client: TelegramClient, name: str
+    ) -> TypeCompact | dict:
+        if not client.is_connected():
+            await client.connect()
 
-    return get_compact_entity(entity)
+        compact_entity = cache.get(str(name))
+        if compact_entity is not None:
+            logger.info(f"Used cache for {str(name)}")
+
+        if compact_entity is None:
+            logger.info(f"Request for name {str(name)}")
+            entity = None
+            try:
+                entity = await client.get_entity(name)
+            except (ValueError, UsernameInvalidError):
+                logger.warning(f"Entity {name!r} not found.")
+            except ChannelPrivateError:
+                logger.warning(f"Either {name} is private or you have been banned.")
+                entity = {"id": name, "title": "PRIVATE"}
+
+            compact_entity = get_compact_entity(entity)
+            cache[str(name)] = compact_entity
+
+        return compact_entity
+
+    return query_entity_info_by_name
+
+
+query_entity_info_by_name = cache_enitity_requests()
 
 
 async def get_non_subscription_entities(
@@ -212,6 +229,17 @@ def get_compact_entity(entity) -> dict:
     # ignore ChatForbidden and megagroups for now
     logger.warning(f"Unknown type {type(entity)}.")
     return dict()
+
+
+@get_compact_entity.register
+def _(entity: dict) -> dict:
+    try:
+        id = get_peer_id(entity["id"], add_mark=False)
+        entity["id"] = id
+    except AttributeError:
+        pass
+
+    return entity
 
 
 @get_compact_entity.register
