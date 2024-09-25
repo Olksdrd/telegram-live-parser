@@ -2,7 +2,7 @@ import os
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Coroutine, Self, TypedDict
+from typing import Callable, Coroutine, Self, TypedDict
 
 from dotenv import load_dotenv
 from telethon import TelegramClient, functions
@@ -26,18 +26,52 @@ def get_dialog_id(message: Message) -> int:
     return resolve_id(message.chat_id)[0]
 
 
-# TODO: cache requests
-async def get_document_info(client: TelegramClient, document_id: int) -> Document:
+async def query_document_info(client: TelegramClient, document_id: int) -> Document:
+    """
+    Send a (rather slow) request to Telegram to get more info about custom emoji.
+    Only small fraction of channels uses them.
+    """
     document = await client(
         functions.messages.GetCustomEmojiDocumentsRequest(document_id=[document_id])
     )
     return document[0]
 
 
-async def get_custom_emoji_alt(document: Document) -> str:
+def extract_custom_emoji_alt(document: Document) -> str:
+    """
+    Extract alternative representation of a custom emoji in UTF-8/16.
+    Note that it not always correctly represents the meaining of a custom emoji,
+    but usually it's close enough.
+    """
     for attribute in document.attributes:
         if hasattr(attribute, "alt"):
             return attribute.alt
+
+
+def cache_custom_emoji_requests() -> Callable:
+    """
+    Since requests are slow and channels usually use only a couple of custom emojis,
+    which are repeated in every message, caching drastically reduces the number of
+    DocumentRequests we're making.
+
+    functools.lru_cache is not suitable, since we don't want to cache a client too,
+    and cachetools is not in standard library -> easier to just use a dictionary.
+    """
+    cache = {}
+
+    async def get_custom_emoji_alt(client: TelegramClient, document_id: int) -> str:
+        alt = cache.get(document_id)
+        if alt is None:
+            print(f"Sending request for custom emoji {document_id}...")
+            doc = await query_document_info(client, document_id)
+            alt = extract_custom_emoji_alt(doc)
+            cache[document_id] = alt
+        return alt
+
+    return get_custom_emoji_alt
+
+
+get_custom_emoji_alt = cache_custom_emoji_requests()
 
 
 def get_reaction_type(reaction_obj: ReactionCount) -> str:
@@ -65,9 +99,8 @@ async def unwrap_reactions(
         return reactions
     for reaction_obj in msg_reactions.results:
         reaction_type = get_reaction_type(reaction_obj)
-        # if isinstance(reaction_type, int):
-        #     custom_reaction_info = await get_document_info(client, reaction_type)
-        #     reaction_type = await get_custom_emoji_alt(custom_reaction_info)
+        if len(reaction_type) > 8:
+            reaction_type = await get_custom_emoji_alt(client, int(reaction_type))
         reactions[reaction_type] = reaction_obj.count
 
     return reactions
