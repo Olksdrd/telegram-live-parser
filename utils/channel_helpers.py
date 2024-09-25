@@ -10,6 +10,7 @@ from telethon.errors.rpcerrorlist import (
     UsernameInvalidError,
 )
 from telethon.functions import channels, messages, users
+from telethon.hints import EntitiesLike
 from telethon.tl.types import (
     Channel,
     Chat,
@@ -179,8 +180,8 @@ async def get_peer_by_id(
 def cache_enitity_requests():
     cache = {}
 
-    async def query_entity_info_by_name(
-        client: TelegramClient, name: str
+    async def query_entity_info(
+        client: TelegramClient, name: EntitiesLike
     ) -> TypeCompact | dict:
         if not client.is_connected():
             await client.connect()
@@ -188,12 +189,12 @@ def cache_enitity_requests():
         compact_entity = cache.get(str(name))
 
         if compact_entity is None:
-            logger.debug(f"Request for name {str(name)}")
-            entity = None
+            logger.debug(f"Request for name {str(name)}.")
             try:
                 entity = await client.get_entity(name)
             except (ValueError, UsernameInvalidError):
-                logger.warning(f"Entity {name!r} not found.")
+                logger.warning(f"Entity {name} not found.")
+                entity = None
             except ChannelPrivateError:
                 logger.warning(f"Either {name} is private or you have been banned.")
                 entity = {"id": name, "title": "PRIVATE"}
@@ -203,10 +204,10 @@ def cache_enitity_requests():
 
         return compact_entity
 
-    return query_entity_info_by_name
+    return query_entity_info
 
 
-query_entity_info_by_name = cache_enitity_requests()
+query_entity_info = cache_enitity_requests()
 
 
 async def get_non_subscription_entities(
@@ -216,7 +217,7 @@ async def get_non_subscription_entities(
 
     dialogs_to_parse = []
     for entity_name in non_subscribed_entities:
-        entity = await query_entity_info_by_name(client, name=entity_name)
+        entity = await query_entity_info(client, name=entity_name)
         dialogs_to_parse.append(entity)
 
     return dialogs_to_parse

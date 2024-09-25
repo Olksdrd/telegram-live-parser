@@ -17,7 +17,7 @@ from telethon.tl.types import (  # DocumentAttributeCustomEmoji,; ReactionCustom
 from telethon.utils import resolve_id
 
 sys.path.insert(0, os.getcwd())
-from utils.channel_helpers import get_compact_name, query_entity_info_by_name
+from utils.channel_helpers import get_compact_name, query_entity_info
 
 load_dotenv(dotenv_path=Path("./env/config.env"))
 
@@ -178,7 +178,7 @@ class MessageBuilder:
         if forwarded_from_peer is not None:
             peer = forwarded_from_peer.from_id
             if peer is not None:
-                compact_dialog = await query_entity_info_by_name(self.client, peer)
+                compact_dialog = await query_entity_info(self.client, peer)
                 self.message["fwd_from"] = {
                     str(key): val
                     for key, val in compact_dialog.items()
