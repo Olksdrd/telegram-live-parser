@@ -1,5 +1,6 @@
 # directories
 env/
+lib/
 
 # configurations, cache etc
 __pycache__/
@@ -7,9 +8,11 @@ __pycache__/
 *.json
 *.env
 *.pyc
+.pre-commit-config.yaml
 
 # files
 *.session*
 *.ipynb
 test*
 *.log*
+*.html
