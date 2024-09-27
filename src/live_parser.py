@@ -36,14 +36,12 @@ async def live_parser(
     )
     async def handler(event: NewMessage.Event) -> None:
         # parse only messages with text, though images may also be of interest
+        builder = MessageBuilder(registered_methods=[], client=tg_client, chats=chats)
         if event.message.message != "":  # tbh messages with len 1 are useless too
-            builder = (
-                MessageBuilder(event.message, chats=chats)
-                .extract_text()
-                .extract_dialog_name()
-            )
-            builder = await builder.extract_forward_info()
-            document = await builder.build()
+            await builder.extract_text(event.message)
+            await builder.extract_dialog_info(event.message)
+            await builder.extract_forward_info(event.message)
+            document = builder.build()
 
             response = message_repository.put_one(document)
             logger.info(

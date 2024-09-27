@@ -8,12 +8,7 @@ from typing import Callable, Coroutine, Self, TypedDict
 from dotenv import load_dotenv
 from telethon import TelegramClient, functions
 from telethon.tl.custom.message import Message
-from telethon.tl.types import (  # DocumentAttributeCustomEmoji,; ReactionCustomEmoji,; ReactionEmoji,
-    Document,
-    MessageReactions,
-    MessageReplies,
-    ReactionCount,
-)
+from telethon.tl.types import Document, MessageReactions, MessageReplies, ReactionCount
 from telethon.utils import resolve_id
 
 sys.path.insert(0, os.getcwd())
@@ -140,51 +135,61 @@ class CompactMessage(TypedDict, total=False):
 class MessageBuilder:
     def __init__(
         self,
-        new_msg: Message,
-        chats: list[dict] | None = None,
+        registered_methods: list[str],
         client: TelegramClient | None = None,
+        chats: list[dict] | None = None,
     ) -> None:
-        self.new_msg = new_msg
-        self.message = CompactMessage()
+        self._msg = CompactMessage()
+        self.registered_methods = [
+            getattr(self, method) for method in registered_methods
+        ]
+        self.client = client
         if chats:
             self.chats = {chat["id"]: chat for chat in chats}
-        self.client = client
 
-    def extract_text(self) -> Self:
-        self.message["msg_id"] = self.new_msg.id
-        self.message["chat_id"] = get_dialog_id(self.new_msg)
-        self.message["msg"] = self.new_msg.message
-        self.message["date"] = self.new_msg.date
+    def reset(self) -> None:
+        self._msg = CompactMessage()
+
+    async def extract_text(self, new_msg: Message) -> Self:
+        self._msg["msg_id"] = new_msg.id
+        self._msg["msg"] = new_msg.message
+        self._msg["date"] = new_msg.date
         return self
 
-    def extract_dialog_name(self) -> Self:
-        chat_name = get_compact_name(self.chats.get(self.message["chat_id"]))
-        chat_title = self.chats.get(self.message["chat_id"]).get("title")
-        self.message["chat_name"] = chat_name
-        self.message["chat_title"] = chat_title
+    async def extract_dialog_info(self, new_msg: Message) -> Coroutine:
+        dialog_id = get_dialog_id(new_msg)
+        self._msg["chat_id"] = dialog_id
+
+        chat_name = get_compact_name(self.chats.get(dialog_id))
+        self._msg["chat_name"] = chat_name
+
+        chat_title = self.chats.get(dialog_id).get("title")
+        self._msg["chat_title"] = chat_title
         return self
 
-    async def extract_engagements(self) -> Coroutine:
-        self.message["views"] = self.new_msg.views
-        self.message["forwards"] = self.new_msg.forwards
-        self.message["replies"] = get_reply_count(self.new_msg.replies)
-        self.message["reactions"] = await unwrap_reactions(
-            msg_reactions=self.new_msg.reactions, client=self.client
+    async def extract_engagements(self, new_msg: Message) -> Coroutine:
+        self._msg["views"] = new_msg.views
+        self._msg["forwards"] = new_msg.forwards
+        self._msg["replies"] = get_reply_count(new_msg.replies)
+        self._msg["reactions"] = await unwrap_reactions(
+            msg_reactions=new_msg.reactions, client=self.client
         )
         return self
 
-    async def extract_forward_info(self) -> Coroutine:
-        forwarded_from_peer = self.new_msg.fwd_from
+    async def extract_forward_info(self, new_msg: Message) -> Coroutine:
+        forwarded_from_peer = new_msg.fwd_from
         if forwarded_from_peer is not None:
             peer = forwarded_from_peer.from_id
             if peer is not None:
                 compact_dialog = await query_entity_info(self.client, peer)
-                self.message["fwd_from"] = {
+                self._msg["fwd_from"] = {
                     str(key): val
                     for key, val in compact_dialog.items()
                     if val is not None
                 }
         return self
 
-    async def build(self) -> Coroutine:
-        return self.message
+    def build(self) -> CompactMessage:
+        final_msg = self._msg
+        self.reset()
+        return final_msg

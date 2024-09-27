@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 async def parse_channel(
     client: TelegramClient,
     message_repository: Repository,
+    builder: MessageBuilder,
     dialog: TypeCompact,
 ) -> None:
     if not client.is_connected():
@@ -31,19 +32,17 @@ async def parse_channel(
     logger.info(f"Retreiving data from {dialog['id']}.")
 
     docs = []
-    async for message in client.iter_messages(chat, limit=25, wait_time=2):
+    async for message in client.iter_messages(chat, limit=110, wait_time=2):
 
-        # don't chain them since async ones return coroutines and not builders
-        builder = MessageBuilder(message, chats=[dialog], client=client).extract_text()
-        builder = builder.extract_dialog_name()
-        builder = await builder.extract_engagements()
-        builder = await builder.extract_forward_info()
-        doc = await builder.build()
+        for method in builder.registered_methods:
+            await method(message)
+
+        doc = builder.build()
 
         docs.append(doc)
-        # message_repository.put_one(doc)
+        message_repository.put_one(doc)
 
-    message_repository.put_many(docs)
+    # message_repository.put_many(docs)
     logger.info(f"{len(docs)} messages retreived.")
 
 
@@ -57,9 +56,20 @@ async def amain() -> None:
     client.loop.set_debug(True)
     logger.info("Telegram Client started.")
 
+    builder = MessageBuilder(
+        registered_methods=[
+            "extract_text",
+            "extract_dialog_info",
+            "extract_engagements",
+            "extract_forward_info",
+        ],
+        client=client,
+        chats=dialogs,
+    )
+
     # not the most effective async :(
     for dialog in dialogs:
-        await parse_channel(client, message_repository, dialog)
+        await parse_channel(client, message_repository, builder, dialog)
 
     message_repository.disconnect()
 
