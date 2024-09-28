@@ -78,16 +78,20 @@ def cache_custom_emoji_requests() -> Callable[[TelegramClient, int], str]:
 get_custom_emoji_alt = cache_custom_emoji_requests()
 
 
-def get_reaction_type(reaction_obj: ReactionCount) -> str:
+async def get_reaction_type(client: TelegramClient, reaction_obj: ReactionCount) -> str:
     """
     There are two distinct type of reactions in Telegram:
     - ordinary utf-8/16 emoticons
     - custom png/webp reactions, enabled on some channels
+
+    Custom ones are marked by * to prevent collisions with ordinary emoticons.
     """
     try:
         return reaction_obj.reaction.emoticon
     except AttributeError:
-        return str(reaction_obj.reaction.document_id)
+        custom_reaction_id = reaction_obj.reaction.document_id
+        reaction = await get_custom_emoji_alt(client, custom_reaction_id)
+        return f"*{reaction}"
 
 
 async def unwrap_reactions(
@@ -102,9 +106,7 @@ async def unwrap_reactions(
     if msg_reactions is None:
         return reactions
     for reaction_obj in msg_reactions.results:
-        reaction_type = get_reaction_type(reaction_obj)
-        if len(reaction_type) > 8:
-            reaction_type = await get_custom_emoji_alt(client, int(reaction_type))
+        reaction_type = await get_reaction_type(client, reaction_obj)
         reactions[reaction_type] = reaction_obj.count
 
     return reactions
