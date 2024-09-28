@@ -22,21 +22,21 @@ class CatchupMongoSession(MongoSession):
         with switch_db(UpdateState, self.database) as _UpdateState:
             rows = list(_UpdateState._get_collection().find())
 
-            # fmt: off
-            return ((
-                row["_id"],
-                types.updates.State(
-                    pts=row["pts"],
-                    qts=row["qts"],
-                    date=datetime.datetime.fromtimestamp(row["date"], tz=datetime.timezone.utc),
-                    seq=row["seq"],
-                    unread_count=0
-                )
-            ) for row in rows)
-            # fmt: on
+        # fmt: off
+        return ((
+            row["_id"],
+            types.updates.State(
+                pts=row["pts"],
+                qts=row["qts"],
+                date=datetime.datetime.fromtimestamp(row["date"], tz=datetime.timezone.utc),
+                seq=row["seq"],
+                unread_count=0
+            )
+        ) for row in rows)
+        # fmt: on
 
 
-def get_telethon_session(
+def get_telemongo_session(
     user: str, passwd: str, ip: str, port: str | int, db: str
 ) -> MongoSession:
     MONGO_URI = f"mongodb://{user}:{passwd}@{ip}:{int(port)}/{db}?authSource=admin"

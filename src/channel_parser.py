@@ -4,11 +4,11 @@ import os
 import sys
 
 from telethon import TelegramClient
+from telethon.hints import EntityLike
 
 sys.path.insert(0, os.getcwd())
 from configs.logging import init_logging
 from parser_helpers import get_chats_to_parse, get_message_repo, get_telegram_client
-from utils.channel_helpers import TypeCompact, get_peer_by_id
 from utils.message_helpers import MessageBuilder
 from utils.repo.interface import Repository
 
@@ -19,17 +19,17 @@ async def parse_channel(
     client: TelegramClient,
     message_repository: Repository,
     builder: MessageBuilder,
-    dialog: TypeCompact,
+    entity: EntityLike,
 ) -> None:
     if not client.is_connected():
         await client.connect()
 
-    chat = await get_peer_by_id(client, dialog)
+    chat = await client.get_input_entity(entity)
     if chat is None:
-        logger.warning(f"Couldn't find chat {dialog['id']}. Skipping...")
+        logger.warning(f"Couldn't find chat {entity}. Skipping...")
         return
 
-    logger.info(f"Retreiving data from {dialog['id']}.")
+    logger.info(f"Retreiving data from {entity}.")
 
     docs = []
     async for message in client.iter_messages(chat, limit=110, wait_time=2):
@@ -69,7 +69,7 @@ async def amain() -> None:
 
     # not the most effective async :(
     for dialog in dialogs:
-        await parse_channel(client, message_repository, builder, dialog)
+        await parse_channel(client, message_repository, builder, dialog["id"])
 
     message_repository.disconnect()
 
