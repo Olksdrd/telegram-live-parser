@@ -58,7 +58,7 @@ def main() -> None:
 
     message_repository = get_message_repo()
 
-    tg_client = get_telegram_client(session_type="mongodb")
+    tg_client = get_telegram_client(session_type=os.getenv("SESSION_DB_TYPE"))
 
     # handle SIGINT without an error message from asyncio
     try:

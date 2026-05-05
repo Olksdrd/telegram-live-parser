@@ -52,7 +52,7 @@ async def amain() -> None:
 
     message_repository = get_message_repo()
 
-    client = get_telegram_client(session_type="mongodb")
+    client = get_telegram_client(session_type=os.getenv("SESSION_DB_TYPE"))
     client.loop.set_debug(True)
     logger.info("Telegram Client started.")
 
