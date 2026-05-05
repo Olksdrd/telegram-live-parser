@@ -54,6 +54,8 @@ async def amain() -> None:
 
     client = get_telegram_client(session_type=os.getenv("SESSION_DB_TYPE"))
     client.loop.set_debug(True)
+    await client.connect()
+    await client.get_dialogs()  # NOTE: needed so that parsing by ID works
     logger.info("Telegram Client started.")
 
     builder = MessageBuilder(
