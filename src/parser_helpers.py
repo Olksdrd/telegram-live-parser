@@ -9,7 +9,6 @@ from telethon import TelegramClient
 sys.path.insert(0, os.getcwd())
 from utils.channel_helpers import TypeCompact
 from utils.repo.interface import Repository, repository_factory
-from utils.tg_helpers import get_telemongo_session
 
 logger = logging.getLogger(__name__)
 
@@ -66,6 +65,7 @@ def get_telegram_client(session_type="sqlite") -> TelegramClient:
     if session_type == "sqlite":
         session = session_name
     elif session_type == "mongodb":
+        from utils.tg_helpers import get_telemongo_session  # NOTE: avoids unnecessary dependencies
         session = get_telemongo_session(
             db=session_name,
             user=os.getenv("DB_USER"),
