@@ -54,7 +54,7 @@ def extract_custom_emoji_alt(document: Document) -> str:
     for attribute in document.attributes:
         if hasattr(attribute, 'alt'):
             return attribute.alt
-    return None
+    return 'Unknown'
 
 
 def cache_custom_emoji_requests() -> Callable[[TelegramClient, int], str]:
@@ -113,7 +113,8 @@ async def unwrap_reactions(
         return reactions
     for reaction_obj in msg_reactions.results:
         reaction_type = await get_reaction_type(client, reaction_obj)
-        reactions[reaction_type] = reaction_obj.count
+        # NOTE: in case of 'Unknown' reaction there could be duplicate keys -> sum them up
+        reactions[reaction_type] = reactions.get(reaction_type, 0) + reaction_obj.count
 
     return reactions
 
