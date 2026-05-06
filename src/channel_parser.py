@@ -3,14 +3,19 @@ import logging
 import os
 import sys
 
-from telethon import TelegramClient
-from telethon.hints import EntityLike
-
 sys.path.insert(0, os.getcwd())
-from configs.logging import init_logging
-from parser_helpers import get_chats_to_parse, get_message_repo, get_telegram_client
-from utils.message_helpers import MessageBuilder
-from utils.repo.interface import Repository
+import contextlib
+from typing import TYPE_CHECKING
+
+from configs.logging import init_logging  # noqa: E402
+from parser_helpers import get_chats_to_parse, get_message_repo, get_telegram_client  # noqa: E402
+from utils.message_helpers import MessageBuilder  # noqa: E402
+
+if TYPE_CHECKING:
+    from telethon import TelegramClient
+    from telethon.hints import EntityLike
+
+    from utils.repo.interface import Repository
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +51,6 @@ async def parse_channel(
 
 
 async def amain() -> None:
-
     dialogs = get_chats_to_parse()
 
     message_repository = get_message_repo()
@@ -78,7 +82,5 @@ async def amain() -> None:
 if __name__ == '__main__':
     init_logging()
 
-    try:
+    with contextlib.suppress(KeyboardInterrupt):
         asyncio.run(amain())
-    except KeyboardInterrupt:
-        pass

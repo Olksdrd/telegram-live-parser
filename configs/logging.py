@@ -9,7 +9,7 @@ LOGS_DIR = './logs/'
 
 class InfoFilter(logging.Filter):
     def __init__(self) -> None:
-        super(InfoFilter, self).__init__()
+        super().__init__()
 
     @override
     def filter(self, record: logging.LogRecord) -> bool | logging.LogRecord:
@@ -58,7 +58,7 @@ log_config = {
     'filters': {
         'info': {
             '()': InfoFilter,
-        }
+        },
     },
     'formatters': {
         'standard': {'format': '%(asctime)s [%(levelname)s]: %(message)s'},
@@ -73,7 +73,7 @@ log_config = {
             'handlers': ['queue_handler'],
             'level': 'DEBUG',
             'propagate': True,
-        }
+        },
     },
 }
 

@@ -1,10 +1,13 @@
-"""Interface for saving channels or messages to MondoDB"""
+"""Interface for saving channels or messages to MondoDB."""
 
 import logging
-from collections.abc import Mapping
+from typing import TYPE_CHECKING
 
 from pymongo import MongoClient
 from pymongo.errors import ServerSelectionTimeoutError
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 logger = logging.getLogger(__name__)
 
@@ -54,9 +57,8 @@ class MongoRepository:
         if document:  # no need to put empty docs
             response = self.collection.insert_one(document)
             return f'Record ID: {response.inserted_id}.'
-        else:
-            logger.warning('Document was empty. Skipping inserting to MongoDB...')
-            return 'Skipped empty'
+        logger.warning('Document was empty. Skipping inserting to MongoDB...')
+        return 'Skipped empty'
 
     def put_many(self, objects: list[Mapping]) -> str:
         docs = [self._convert_message_to_document(msg) for msg in objects]
@@ -67,11 +69,9 @@ class MongoRepository:
         if non_empty_docs:  # can't put an empty list to MongoDB
             response = self.collection.insert_many(non_empty_docs)
             return f'Inserted {len(non_empty_docs)} objects. {response}'
-        else:
-            logger.error("Can't put an empty list to a database. Skipping inserting to MongoDB...")
-            return 'Failed to insert any document'
+        logger.error("Can't put an empty list to a database. Skipping inserting to MongoDB...")
+        return 'Failed to insert any document'
 
     def get_all(self) -> list[Mapping]:
-        objects_list = list(self.collection.find())
+        return list(self.collection.find())
 
-        return objects_list

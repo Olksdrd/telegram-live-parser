@@ -1,24 +1,28 @@
 import logging
 import os
 import sys
-from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Self, TypedDict
+from typing import TYPE_CHECKING, Any, Self, TypedDict
 
 from dotenv import load_dotenv
 from telethon import TelegramClient, functions
-from telethon.tl.custom.message import Message
-from telethon.tl.types import (
-    Document,
-    MessageReactions,
-    MessageReplies,
-    ReactionCount,
-    MessageFwdHeader,
-)
 from telethon.utils import resolve_id
 
 sys.path.insert(0, os.getcwd())
-from utils.channel_helpers import get_compact_name, query_entity_info
+from utils.channel_helpers import get_compact_name, query_entity_info  # noqa: E402
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from datetime import datetime
+
+    from telethon.tl.custom.message import Message
+    from telethon.tl.types import (
+        Document,
+        MessageFwdHeader,
+        MessageReactions,
+        MessageReplies,
+        ReactionCount,
+    )
 
 load_dotenv(dotenv_path=Path('./env/config.env'))
 
@@ -26,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_dialog_id(message: Message) -> int:
-    """Return unmarked id of a chat where message came from"""
+    """Return unmarked id of a chat where message came from."""
     return resolve_id(message.chat_id)[0]
 
 
@@ -36,7 +40,7 @@ async def query_document_info(client: TelegramClient, document_id: int) -> Docum
     Only small fraction of channels uses them.
     """
     document = await client(
-        functions.messages.GetCustomEmojiDocumentsRequest(document_id=[document_id])
+        functions.messages.GetCustomEmojiDocumentsRequest(document_id=[document_id]),
     )
     return document[0]
 
@@ -50,6 +54,7 @@ def extract_custom_emoji_alt(document: Document) -> str:
     for attribute in document.attributes:
         if hasattr(attribute, 'alt'):
             return attribute.alt
+    return None
 
 
 def cache_custom_emoji_requests() -> Callable[[TelegramClient, int], str]:
@@ -82,7 +87,7 @@ async def get_reaction_type(client: TelegramClient, reaction_obj: ReactionCount)
     """
     There are two distinct type of reactions in Telegram:
     - ordinary utf-8/16 emoticons
-    - custom png/webp reactions, enabled on some channels
+    - custom png/webp reactions, enabled on some channels.
 
     Custom ones are marked by * to prevent collisions with ordinary emoticons.
     """
@@ -95,12 +100,13 @@ async def get_reaction_type(client: TelegramClient, reaction_obj: ReactionCount)
 
 
 async def unwrap_reactions(
-    msg_reactions: MessageReactions | None, client: TelegramClient | None = None
+    msg_reactions: MessageReactions | None,
+    client: TelegramClient | None = None,
 ) -> dict[str, int]:
     """
     Return all reactions to a message with counts
     Ex: {'😁': 23, '👍': 12, '❤': 2}
-    Note that it's pointless to use it on recent messages
+    Note that it's pointless to use it on recent messages.
     """
     reactions: dict[str, int] = {}
     if msg_reactions is None:
@@ -187,7 +193,8 @@ class MessageBuilder:
         self._msg['forwards'] = new_msg.forwards
         self._msg['replies'] = get_reply_count(new_msg.replies)
         self._msg['reactions'] = await unwrap_reactions(
-            msg_reactions=new_msg.reactions, client=self.client
+            msg_reactions=new_msg.reactions,
+            client=self.client,
         )
         return self
 

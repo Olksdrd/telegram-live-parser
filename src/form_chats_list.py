@@ -8,9 +8,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 sys.path.insert(0, os.getcwd())
-from configs.logging import init_logging
-from parser_helpers import get_channel_repo, get_telegram_client
-from utils.channel_helpers import get_non_subscription_entities, get_subscriptions_list
+from configs.logging import init_logging  # noqa: E402
+from parser_helpers import get_channel_repo, get_telegram_client  # noqa: E402
+from utils.channel_helpers import (  # noqa: E402
+    get_non_subscription_entities,
+    get_subscriptions_list,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -18,9 +21,8 @@ logger = logging.getLogger(__name__)
 def configure() -> list[str]:
     load_dotenv(dotenv_path=Path('./env/config.env'))
 
-    with open(os.getenv('NON_SUBBED_CHANNELS_LIST'), 'r') as f:
+    with open(os.getenv('NON_SUBBED_CHANNELS_LIST')) as f:
         non_subscribed_channels = json.load(f)
-
     return list(set(non_subscribed_channels))
 
 

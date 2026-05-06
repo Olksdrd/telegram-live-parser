@@ -7,8 +7,12 @@ from dotenv import load_dotenv
 from telethon import TelegramClient
 
 sys.path.insert(0, os.getcwd())
-from utils.channel_helpers import TypeCompact
-from utils.repo.interface import Repository, repository_factory
+from typing import TYPE_CHECKING
+
+from utils.repo.interface import Repository, repository_factory  # noqa: E402
+
+if TYPE_CHECKING:
+    from utils.channel_helpers import TypeCompact
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +20,6 @@ load_dotenv(dotenv_path=Path(os.getenv('CONFIG_PATH')))
 
 
 def get_message_repo() -> Repository:
-
     message_repository = repository_factory(
         repo_type=os.getenv('MESSAGE_REPO'),
         table_name=os.getenv('MESSAGE_TABLE'),
@@ -27,12 +30,10 @@ def get_message_repo() -> Repository:
         port=os.getenv('DB_PORT'),
     )
     message_repository.connect()
-
     return message_repository
 
 
 def get_channel_repo() -> Repository:
-
     channel_repository = repository_factory(
         repo_type=os.getenv('CHANNEL_REPO'),
         table_name=os.getenv('CHANNEL_TABLE'),
@@ -43,23 +44,19 @@ def get_channel_repo() -> Repository:
         port=os.getenv('DB_PORT'),
     )
     channel_repository.connect()
-
     return channel_repository
 
 
 def get_chats_to_parse() -> list[TypeCompact]:
-
     logger.info('Fetching channels list...')
     chats_repository = get_channel_repo()
     chats = chats_repository.get_all()
     chats_repository.disconnect()
     logger.info('Channels list loaded.')
-
     return chats
 
 
 def get_telegram_client(session_type='sqlite') -> TelegramClient:
-
     session_name = os.getenv('SESSION_NAME')
 
     if session_type == 'sqlite':
@@ -76,11 +73,9 @@ def get_telegram_client(session_type='sqlite') -> TelegramClient:
         )
 
     logger.info('Initializing Telegram Client...')
-    client = TelegramClient(
+    return TelegramClient(
         session=session,
         api_id=os.getenv('API_ID'),
         api_hash=os.getenv('API_HASH'),
         catch_up=True,
     )
-
-    return client

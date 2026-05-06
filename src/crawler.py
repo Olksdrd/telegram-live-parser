@@ -6,15 +6,12 @@ from dotenv import load_dotenv
 from telethon import TelegramClient
 
 sys.path.insert(0, os.getcwd())
-from utils.channel_helpers import (
-    CompactChannel,
-    CompactChat,
-    CompactUser,
+from utils.channel_helpers import (  # noqa: E402
     TypeCompact,
     entitity_info_request,
     get_peer_id,
 )
-from utils.repo.interface import Repository, repository_factory
+from utils.repo.interface import Repository, repository_factory  # noqa: E402
 
 
 async def amain(
@@ -32,7 +29,7 @@ async def amain(
         if message.fwd_from is not None:
             peer = message.fwd_from.from_id
             peer_id = get_peer_id(peer)
-            if peer_id not in seen_channels.keys():
+            if peer_id not in seen_channels:
                 res = await entitity_info_request(client, peer)
                 seen_channels[peer_id] = res
             else:
@@ -45,7 +42,7 @@ async def amain(
 
 
 if __name__ == '__main__':
-    with open('./tg-keys.json', 'r') as f:
+    with open('./tg-keys.json') as f:
         keys = json.load(f)
 
     load_dotenv('./env/congig.env')

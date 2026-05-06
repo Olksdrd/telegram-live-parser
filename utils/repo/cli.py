@@ -1,8 +1,11 @@
-"""Good for printing a dozen of messages to STDOUT for quick testing"""
+"""Good for printing a dozen of messages to STDOUT for quick testing."""
 
 import json
 import logging
-from collections.abc import Mapping
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 logger = logging.getLogger(__name__)
 
@@ -36,4 +39,5 @@ class CliRepository:
 
     def get_all(self) -> list[Mapping]:
         # ? read from STDIN?
-        raise Exception('How is it supposed to work?')
+        msg = 'How is it supposed to work?'
+        raise Exception(msg)

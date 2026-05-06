@@ -6,14 +6,16 @@ Useful for investigating parsing results and looking for edge cases.
 import json
 import logging
 import os
-from collections.abc import Mapping
-from typing import Optional
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 logger = logging.getLogger(__name__)
 
 
 class LocalRepository:
-    def __init__(self, table_name: Optional[str] = None, **kwargs) -> None:
+    def __init__(self, table_name: str | None = None, **kwargs) -> None:
         self.path = f'./{table_name}.json'
 
     def connect(self) -> None:
@@ -32,15 +34,15 @@ class LocalRepository:
         doc = {k: v for k, v in object.items() if v}
         if not doc:
             logger.warning('Document was empty. Skipping...')
-            return
+            return None
         with open(self.path, mode='r+') as file:
             try:
                 file.seek(0, 2)
                 position = file.tell() - 1
                 file.seek(position)
-                file.write(',{}]'.format(json.dumps(doc, default=str, ensure_ascii=False)))
+                file.write(f',{json.dumps(doc, default=str, ensure_ascii=False)}]')
             except ValueError:
-                file.write('[{}]'.format(json.dumps(doc, default=str, ensure_ascii=False)))
+                file.write(f'[{json.dumps(doc, default=str, ensure_ascii=False)}]')
         return '-' * 40
 
     def put_many(self, objects: list[Mapping]) -> str:
@@ -57,7 +59,6 @@ class LocalRepository:
     #     pass
 
     def get_all(self) -> list[Mapping]:
-        with open(self.path, 'r') as f:
-            objects_list = json.load(f)
+        with open(self.path) as f:
+            return json.load(f)
 
-        return objects_list

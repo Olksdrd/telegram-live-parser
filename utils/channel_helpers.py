@@ -1,16 +1,13 @@
 import logging
-from datetime import datetime
 from functools import singledispatch
-from typing import Optional, Self, TypedDict
+from typing import TYPE_CHECKING, Self, TypedDict
 
-from telethon import TelegramClient
 from telethon.errors.rpcerrorlist import (
     ChannelPrivateError,
     ChatIdInvalidError,
     UsernameInvalidError,
 )
 from telethon.functions import channels, messages, users
-from telethon.hints import EntitiesLike
 from telethon.tl.types import (
     Channel,
     Chat,
@@ -22,9 +19,15 @@ from telethon.tl.types import (
     TypePeer,
     User,
 )
-from telethon.tl.types.messages import ChatFull
-from telethon.tl.types.users import UserFull
 from telethon.utils import get_peer_id
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from telethon import TelegramClient
+    from telethon.hints import EntitiesLike
+    from telethon.tl.types.messages import ChatFull
+    from telethon.tl.types.users import UserFull
 
 logger = logging.getLogger(__name__)
 
@@ -77,11 +80,11 @@ class CompactChat(TypedDict, total=False):
 
 class CompactUser(TypedDict, total=False):
     id: int
-    username: Optional[str]
-    first_name: Optional[str]
-    last_name: Optional[str]
-    phone: Optional[str]
-    description: Optional[str]
+    username: str | None
+    first_name: str | None
+    last_name: str | None
+    phone: str | None
+    description: str | None
 
     @classmethod
     def build_from_api(cls, response: UserFull) -> Self:
@@ -162,10 +165,12 @@ async def peer_info_request(client: TelegramClient, peer: TypePeer) -> TypeCompa
         res = await get_user_info(client, peer)
         if res is not None:
             return CompactUser.build_from_api(res)
+    return None
 
 
 async def get_peer_by_id(
-    client: TelegramClient, dialog: TypeCompact
+    client: TelegramClient,
+    dialog: TypeCompact,
 ) -> TypeCompact | TypeInputPeer | None:
     try:
         chat = await client.get_input_entity(dialog['id'])
@@ -185,7 +190,7 @@ def cache_enitity_requests():
         compact_entity = cache.get(str(name))
 
         if compact_entity is None:
-            logger.debug(f'Request for name {str(name)}.')
+            logger.debug(f'Request for name {name!s}.')
             try:
                 entity = await client.get_entity(name)
             except ValueError, UsernameInvalidError:
@@ -193,6 +198,8 @@ def cache_enitity_requests():
                 entity = None
             except ChannelPrivateError:
                 logger.warning(f'Either {name} is private or you have been banned.')
+                # NOTE: name here is just an ID: there is no channel name in MessageFwdHeader
+                # NOTE: but the name can be seen in telegram app
                 entity = {'id': name, 'title': 'PRIVATE'}
 
             compact_entity = get_compact_entity(entity)
@@ -207,7 +214,8 @@ query_entity_info = cache_enitity_requests()
 
 
 async def get_non_subscription_entities(
-    client: TelegramClient, non_subscribed_entities: list[str]
+    client: TelegramClient,
+    non_subscribed_entities: list[str],
 ) -> list[TypeCompact]:
     logger.info('Adding additional entities...')
 
@@ -223,7 +231,7 @@ async def get_non_subscription_entities(
 def get_compact_entity(entity) -> dict:
     # ignore ChatForbidden and megagroups for now
     logger.warning(f'Unknown type {type(entity)}.')
-    return dict()
+    return {}
 
 
 @get_compact_entity.register
@@ -239,7 +247,7 @@ def _(entity: dict) -> dict:
 
 @get_compact_entity.register
 def _(entity: Channel) -> CompactChannel:
-    compact_dialog = CompactChannel(
+    return CompactChannel(
         id=entity.id,
         name=entity.username,
         title=entity.title,
@@ -247,32 +255,26 @@ def _(entity: Channel) -> CompactChannel:
         creation_date=entity.date,
     )
 
-    return compact_dialog
-
 
 @get_compact_entity.register
 def _(entity: User) -> CompactUser:
-    compact_dialog = CompactUser(
+    return CompactUser(
         id=entity.id,
         username=entity.username,
         first_name=entity.first_name,
         last_name=entity.last_name,
     )
 
-    return compact_dialog
-
 
 @get_compact_entity.register
 def _(entity: Chat) -> CompactChat:
     parent_peer = entity.migrated_to
-    compact_dialog = CompactChat(
+    return CompactChat(
         id=entity.id,
         title=entity.title,
         creation_date=entity.date,
         parent_channel=parent_peer.channel_id if parent_peer else None,
     )
-
-    return compact_dialog
 
 
 async def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
@@ -285,7 +287,7 @@ async def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
 
         if compact_dialog:
             dialogs_to_parse.append(
-                {key: val for key, val in compact_dialog.items() if val is not None}
+                {key: val for key, val in compact_dialog.items() if val is not None},
             )
 
     logger.info(f'{len(dialogs_to_parse)} dialogs added.')
