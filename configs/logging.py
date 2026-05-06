@@ -4,6 +4,8 @@ import os
 from logging.config import dictConfig
 from typing import override
 
+LOGS_DIR = './logs/'
+
 
 class InfoFilter(logging.Filter):
     def __init__(self) -> None:
@@ -34,7 +36,7 @@ handlers = {
         "class": "logging.handlers.RotatingFileHandler",
         "formatter": "detailed",
         "level": "DEBUG",
-        "filename": "configs/logfile.log",
+        "filename": f"{LOGS_DIR}/logfile.log",
         "maxBytes": 10_000_000,  # 10 Mb
         "backupCount": 5,
     },
@@ -46,7 +48,6 @@ handlers = {
 }
 
 if os.getenv("HOME") == "/home/docker":
-    print("inside if")
     handlers.pop("file")
     handlers_list.remove("file")
 
@@ -78,6 +79,9 @@ log_config = {
 
 
 def init_logging():
+    if not os.path.exists(LOGS_DIR):
+        os.makedirs(LOGS_DIR)
+
     dictConfig(log_config)
 
     # start a thread for a queue handler so it doesn't block useful work
