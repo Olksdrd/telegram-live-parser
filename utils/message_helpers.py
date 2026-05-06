@@ -20,7 +20,7 @@ from telethon.utils import resolve_id
 sys.path.insert(0, os.getcwd())
 from utils.channel_helpers import get_compact_name, query_entity_info
 
-load_dotenv(dotenv_path=Path("./env/config.env"))
+load_dotenv(dotenv_path=Path('./env/config.env'))
 
 logger = logging.getLogger(__name__)
 
@@ -44,11 +44,11 @@ async def query_document_info(client: TelegramClient, document_id: int) -> Docum
 def extract_custom_emoji_alt(document: Document) -> str:
     """
     Extract alternative representation of a custom emoji in UTF-8/16.
-    Note that it not always correctly represents the meaining of a custom emoji,
+    Note that it not always correctly represents the meaning of a custom emoji,
     but usually it's close enough.
     """
     for attribute in document.attributes:
-        if hasattr(attribute, "alt"):
+        if hasattr(attribute, 'alt'):
             return attribute.alt
 
 
@@ -66,7 +66,7 @@ def cache_custom_emoji_requests() -> Callable[[TelegramClient, int], str]:
     async def get_custom_emoji_alt(client: TelegramClient, document_id: int) -> str:
         alt = cache.get(document_id)
         if alt is None:
-            logger.debug(f"Sending request for custom emoji {document_id}...")
+            logger.debug(f'Sending request for custom emoji {document_id}...')
             doc = await query_document_info(client, document_id)
             alt = extract_custom_emoji_alt(doc)
             cache[document_id] = alt
@@ -91,7 +91,7 @@ async def get_reaction_type(client: TelegramClient, reaction_obj: ReactionCount)
     except AttributeError:
         custom_reaction_id = reaction_obj.reaction.document_id
         reaction = await get_custom_emoji_alt(client, custom_reaction_id)
-        return f"*{reaction}"
+        return f'*{reaction}'
 
 
 async def unwrap_reactions(
@@ -118,13 +118,11 @@ def get_reply_count(replies_obj: MessageReplies | None) -> int:
     return replies_obj.replies
 
 
-async def get_fwd_from_info(
-    client: TelegramClient, from_peer: MessageFwdHeader
-) -> dict[str, Any]:
+async def get_fwd_from_info(client: TelegramClient, from_peer: MessageFwdHeader) -> dict[str, Any]:
     if from_peer.from_id is not None:
         fwd_peer_info = await query_entity_info(client, from_peer.from_id)
     elif from_peer.from_name is not None:
-        fwd_peer_info = {"full_name": from_peer.from_name}
+        fwd_peer_info = {'full_name': from_peer.from_name}
     else:
         fwd_peer_info = {}
     return fwd_peer_info
@@ -158,39 +156,37 @@ class MessageBuilder:
         chats: list[dict] | None = None,
     ) -> None:
         self._msg = CompactMessage()
-        self.registered_methods = [
-            getattr(self, method) for method in registered_methods
-        ]
+        self.registered_methods = [getattr(self, method) for method in registered_methods]
         self.client = client
         if chats:
-            self.chats = {chat["id"]: chat for chat in chats}
+            self.chats = {chat['id']: chat for chat in chats}
 
     def reset(self) -> None:
         self._msg = CompactMessage()
 
     async def extract_text(self, new_msg: Message) -> Self:
-        self._msg["msg"] = new_msg.message
-        self._msg["date"] = new_msg.date
+        self._msg['msg'] = new_msg.message
+        self._msg['date'] = new_msg.date
         return self
 
     async def extract_dialog_info(self, new_msg: Message) -> Self:
-        self._msg["msg_id"] = new_msg.id
+        self._msg['msg_id'] = new_msg.id
 
         dialog_id = get_dialog_id(new_msg)
-        self._msg["chat_id"] = dialog_id
+        self._msg['chat_id'] = dialog_id
 
         chat_name = get_compact_name(self.chats.get(dialog_id))
-        self._msg["chat_name"] = chat_name
+        self._msg['chat_name'] = chat_name
 
-        chat_title = self.chats.get(dialog_id).get("title")
-        self._msg["chat_title"] = chat_title
+        chat_title = self.chats.get(dialog_id).get('title')
+        self._msg['chat_title'] = chat_title
         return self
 
     async def extract_engagements(self, new_msg: Message) -> Self:
-        self._msg["views"] = new_msg.views
-        self._msg["forwards"] = new_msg.forwards
-        self._msg["replies"] = get_reply_count(new_msg.replies)
-        self._msg["reactions"] = await unwrap_reactions(
+        self._msg['views'] = new_msg.views
+        self._msg['forwards'] = new_msg.forwards
+        self._msg['replies'] = get_reply_count(new_msg.replies)
+        self._msg['reactions'] = await unwrap_reactions(
             msg_reactions=new_msg.reactions, client=self.client
         )
         return self
@@ -199,7 +195,7 @@ class MessageBuilder:
         forwarded_from_peer = new_msg.fwd_from
         if forwarded_from_peer is not None:
             fwd_peer_info = await get_fwd_from_info(self.client, forwarded_from_peer)
-            self._msg["fwd_from"] = {
+            self._msg['fwd_from'] = {
                 str(key): val for key, val in fwd_peer_info.items() if val is not None
             }
         return self

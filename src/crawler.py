@@ -44,24 +44,24 @@ async def amain(
     # repository.put_many(docs)
 
 
-if __name__ == "__main__":
-    with open("./tg-keys.json", "r") as f:
+if __name__ == '__main__':
+    with open('./tg-keys.json', 'r') as f:
         keys = json.load(f)
 
-    load_dotenv("./env/congig.env")
+    load_dotenv('./env/congig.env')
 
     repository = repository_factory(
-        repo_type=os.getenv("REPOSITORY_TYPE"),
-        table_name="cached_channels",
-        collection_name=os.getenv("COLLECTION_NAME"),
-        user=os.getenv("DB_USER"),
-        passwd=os.getenv("DB_PASSWD"),
-        ip=os.getenv("DB_IP"),
-        port=os.getenv("DB_PORT"),
+        repo_type=os.getenv('REPOSITORY_TYPE'),
+        table_name='cached_channels',
+        collection_name=os.getenv('COLLECTION_NAME'),
+        user=os.getenv('DB_USER'),
+        passwd=os.getenv('DB_PASSWD'),
+        ip=os.getenv('DB_IP'),
+        port=os.getenv('DB_PORT'),
     )
     repository.connect()
 
-    client = TelegramClient("anon", keys["api_id"], keys["api_hash"])
+    client = TelegramClient('anon', keys['api_id'], keys['api_hash'])
 
     with client:
         client.loop.set_debug(True)

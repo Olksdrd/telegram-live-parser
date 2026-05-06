@@ -30,7 +30,7 @@ class CatchupMongoSession(MongoSession):
                 qts=row["qts"],
                 date=datetime.datetime.fromtimestamp(row["date"], tz=datetime.timezone.utc),
                 seq=row["seq"],
-                unread_count=0
+                unread_count=0,
             )
         ) for row in rows)
         # fmt: on
@@ -39,13 +39,13 @@ class CatchupMongoSession(MongoSession):
 def get_telemongo_session(
     user: str, passwd: str, ip: str, port: str | int, db: str
 ) -> MongoSession:
-    MONGO_URI = f"mongodb://{user}:{passwd}@{ip}:{int(port)}/{db}?authSource=admin"
-    logger.info("Getting Mongo Session for Telegram Client...")
+    MONGO_URI = f'mongodb://{user}:{passwd}@{ip}:{int(port)}/{db}?authSource=admin'
+    logger.info('Getting Mongo Session for Telegram Client...')
     mongoengine.connect(
         db,
         host=MONGO_URI,
     )
     session = CatchupMongoSession(db, host=MONGO_URI)
-    logger.info("Mongo Session connected.")
+    logger.info('Mongo Session connected.')
 
     return session

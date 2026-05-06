@@ -16,9 +16,9 @@ logger = logging.getLogger(__name__)
 
 
 def configure() -> list[str]:
-    load_dotenv(dotenv_path=Path("./env/config.env"))
+    load_dotenv(dotenv_path=Path('./env/config.env'))
 
-    with open(os.getenv("NON_SUBBED_CHANNELS_LIST"), "r") as f:
+    with open(os.getenv('NON_SUBBED_CHANNELS_LIST'), 'r') as f:
         non_subscribed_channels = json.load(f)
 
     return list(set(non_subscribed_channels))
@@ -29,28 +29,24 @@ async def amain() -> None:
 
     repository = get_channel_repo()
 
-    client = get_telegram_client(session_type=os.getenv("SESSION_DB_TYPE"))
+    client = get_telegram_client(session_type=os.getenv('SESSION_DB_TYPE'))
 
     await client.start()
-    logger.info("Telegram Client started.")
+    logger.info('Telegram Client started.')
 
     dialogs_to_parse = []
-    if os.getenv("PARSE_SUBSRIPTIONS") == "yes":
+    if os.getenv('PARSE_SUBSRIPTIONS') == 'yes':
         dialogs_to_parse = await get_subscriptions_list(client)
 
-    dialogs_to_parse += await get_non_subscription_entities(
-        client, non_subscribed_channels
-    )
+    dialogs_to_parse += await get_non_subscription_entities(client, non_subscribed_channels)
 
     repository.put_many(dialogs_to_parse)
-    logger.info(
-        f"Info for {len([dialog for dialog in dialogs_to_parse if dialog])} chats saved."
-    )
+    logger.info(f'Info for {len([dialog for dialog in dialogs_to_parse if dialog])} chats saved.')
 
     repository.disconnect()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     init_logging()
 
     asyncio.run(amain())

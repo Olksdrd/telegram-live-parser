@@ -12,19 +12,19 @@ from utils.repo.interface import Repository, repository_factory
 
 logger = logging.getLogger(__name__)
 
-load_dotenv(dotenv_path=Path(os.getenv("CONFIG_PATH")))
+load_dotenv(dotenv_path=Path(os.getenv('CONFIG_PATH')))
 
 
 def get_message_repo() -> Repository:
 
     message_repository = repository_factory(
-        repo_type=os.getenv("MESSAGE_REPO"),
-        table_name=os.getenv("MESSAGE_TABLE"),
-        collection_name=os.getenv("MESSAGE_COLLECTION"),
-        user=os.getenv("DB_USER"),
-        passwd=os.getenv("DB_PASSWD"),
-        ip=os.getenv("DB_IP"),
-        port=os.getenv("DB_PORT"),
+        repo_type=os.getenv('MESSAGE_REPO'),
+        table_name=os.getenv('MESSAGE_TABLE'),
+        collection_name=os.getenv('MESSAGE_COLLECTION'),
+        user=os.getenv('DB_USER'),
+        passwd=os.getenv('DB_PASSWD'),
+        ip=os.getenv('DB_IP'),
+        port=os.getenv('DB_PORT'),
     )
     message_repository.connect()
 
@@ -34,13 +34,13 @@ def get_message_repo() -> Repository:
 def get_channel_repo() -> Repository:
 
     channel_repository = repository_factory(
-        repo_type=os.getenv("CHANNEL_REPO"),
-        table_name=os.getenv("CHANNEL_TABLE"),
-        collection_name=os.getenv("CHANNEL_COLLECTION"),
-        user=os.getenv("DB_USER"),
-        passwd=os.getenv("DB_PASSWD"),
-        ip=os.getenv("DB_IP"),
-        port=os.getenv("DB_PORT"),
+        repo_type=os.getenv('CHANNEL_REPO'),
+        table_name=os.getenv('CHANNEL_TABLE'),
+        collection_name=os.getenv('CHANNEL_COLLECTION'),
+        user=os.getenv('DB_USER'),
+        passwd=os.getenv('DB_PASSWD'),
+        ip=os.getenv('DB_IP'),
+        port=os.getenv('DB_PORT'),
     )
     channel_repository.connect()
 
@@ -49,36 +49,37 @@ def get_channel_repo() -> Repository:
 
 def get_chats_to_parse() -> list[TypeCompact]:
 
-    logger.info("Fetching channels list...")
+    logger.info('Fetching channels list...')
     chats_repository = get_channel_repo()
     chats = chats_repository.get_all()
     chats_repository.disconnect()
-    logger.info("Channels list loaded.")
+    logger.info('Channels list loaded.')
 
     return chats
 
 
-def get_telegram_client(session_type="sqlite") -> TelegramClient:
+def get_telegram_client(session_type='sqlite') -> TelegramClient:
 
-    session_name = os.getenv("SESSION_NAME")
+    session_name = os.getenv('SESSION_NAME')
 
-    if session_type == "sqlite":
+    if session_type == 'sqlite':
         session = session_name
-    elif session_type == "mongodb":
+    elif session_type == 'mongodb':
         from utils.tg_helpers import get_telemongo_session  # NOTE: avoids unnecessary dependencies
+
         session = get_telemongo_session(
             db=session_name,
-            user=os.getenv("DB_USER"),
-            passwd=os.getenv("DB_PASSWD"),
-            ip=os.getenv("DB_IP"),
-            port=os.getenv("DB_PORT"),
+            user=os.getenv('DB_USER'),
+            passwd=os.getenv('DB_PASSWD'),
+            ip=os.getenv('DB_IP'),
+            port=os.getenv('DB_PORT'),
         )
 
-    logger.info("Initializing Telegram Client...")
+    logger.info('Initializing Telegram Client...')
     client = TelegramClient(
         session=session,
-        api_id=os.getenv("API_ID"),
-        api_hash=os.getenv("API_HASH"),
+        api_id=os.getenv('API_ID'),
+        api_hash=os.getenv('API_HASH'),
         catch_up=True,
     )
 

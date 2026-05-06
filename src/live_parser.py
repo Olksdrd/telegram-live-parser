@@ -20,11 +20,11 @@ async def live_parser(
 ) -> None:
 
     await tg_client.start()
-    logger.info("Telegram Client started.")
+    logger.info('Telegram Client started.')
 
-    logger.info(f"Parsing data from {len(chats)} chats...")
+    logger.info(f'Parsing data from {len(chats)} chats...')
 
-    chat_ids = [chat["id"] for chat in chats]
+    chat_ids = [chat['id'] for chat in chats]
 
     @tg_client.on(
         NewMessage(
@@ -37,7 +37,7 @@ async def live_parser(
     async def handler(event: NewMessage.Event) -> None:
         # parse only messages with text, though images may also be of interest
         builder = MessageBuilder(registered_methods=[], client=tg_client, chats=chats)
-        if event.message.message != "":  # tbh messages with len 1 are useless too
+        if event.message.message != '':  # tbh messages with len 1 are useless too
             await builder.extract_text(event.message)
             await builder.extract_dialog_info(event.message)
             await builder.extract_forward_info(event.message)
@@ -45,8 +45,7 @@ async def live_parser(
 
             response = message_repository.put_one(document)
             logger.info(
-                f'Added message {document["msg_id"]} '
-                f'from chat {document["chat_id"]}. ' + response
+                f'Added message {document["msg_id"]} from chat {document["chat_id"]}. ' + response
             )
 
     await tg_client.run_until_disconnected()
@@ -58,7 +57,7 @@ def main() -> None:
 
     message_repository = get_message_repo()
 
-    tg_client = get_telegram_client(session_type=os.getenv("SESSION_DB_TYPE"))
+    tg_client = get_telegram_client(session_type=os.getenv('SESSION_DB_TYPE'))
 
     # handle SIGINT without an error message from asyncio
     try:
@@ -69,7 +68,7 @@ def main() -> None:
         message_repository.disconnect()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     init_logging()
 
     main()

@@ -29,11 +29,10 @@ async def parse_channel(
         logger.warning(f"Couldn't find chat {entity}. Skipping...")
         return
 
-    logger.info(f"Retreiving data from {entity}.")
+    logger.info(f'Retreiving data from {entity}.')
 
     docs = []
     async for message in client.iter_messages(chat, limit=110, wait_time=2):
-
         for method in builder.registered_methods:
             await method(message)
 
@@ -43,7 +42,7 @@ async def parse_channel(
         message_repository.put_one(doc)
 
     # message_repository.put_many(docs)
-    logger.info(f"{len(docs)} messages retreived.")
+    logger.info(f'{len(docs)} messages retreived.')
 
 
 async def amain() -> None:
@@ -52,18 +51,18 @@ async def amain() -> None:
 
     message_repository = get_message_repo()
 
-    client = get_telegram_client(session_type=os.getenv("SESSION_DB_TYPE"))
+    client = get_telegram_client(session_type=os.getenv('SESSION_DB_TYPE'))
     client.loop.set_debug(True)
     await client.connect()
     await client.get_dialogs()  # NOTE: needed so that parsing by ID works
-    logger.info("Telegram Client started.")
+    logger.info('Telegram Client started.')
 
     builder = MessageBuilder(
         registered_methods=[
-            "extract_text",
-            "extract_dialog_info",
-            "extract_engagements",
-            "extract_forward_info",
+            'extract_text',
+            'extract_dialog_info',
+            'extract_engagements',
+            'extract_forward_info',
         ],
         client=client,
         chats=dialogs,
@@ -71,12 +70,12 @@ async def amain() -> None:
 
     # not the most effective async :(
     for dialog in dialogs:
-        await parse_channel(client, message_repository, builder, dialog["id"])
+        await parse_channel(client, message_repository, builder, dialog['id'])
 
     message_repository.disconnect()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     init_logging()
 
     try:

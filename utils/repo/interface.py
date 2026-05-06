@@ -36,10 +36,10 @@ class Repository[T](Protocol):
 
 
 class RepositoryType(StrEnum):
-    MONGODB = "mongo"
-    DYNAMODB = "dynamo"
-    LOCAL_STORAGE = "local"
-    CLI = "cli"
+    MONGODB = 'mongo'
+    DYNAMODB = 'dynamo'
+    LOCAL_STORAGE = 'local'
+    CLI = 'cli'
 
 
 def repository_factory(
@@ -50,14 +50,14 @@ def repository_factory(
     passwd: Optional[str] = None,
     ip: Optional[str] = None,
     port: Optional[str | int] = None,
-    region: Optional[str] = "eu-central-1",
+    region: Optional[str] = 'eu-central-1',
 ) -> Repository:
     # allows to avoid installing unnecessary dependencies
     # ! repo_type should be one of the options from the Enum above
     # load corresponding module from .utils/repo directory
-    repo_module = importlib.import_module(f"utils.repo.{repo_type.lower()}")
+    repo_module = importlib.import_module(f'utils.repo.{repo_type.lower()}')
     # get repository class by name
-    repo = getattr(repo_module, f"{repo_type.capitalize()}Repository")
+    repo = getattr(repo_module, f'{repo_type.capitalize()}Repository')
     # unused kwargs will be ignored
     return repo(
         table_name=table_name,
