@@ -71,11 +71,20 @@ log_config = {
     "loggers": {
         "root": {
             "handlers": ["queue_handler"],
-            "level": "INFO",
+            "level": "DEBUG",
             "propagate": True,
         }
     },
 }
+
+
+def filter_external_logs() -> None:
+    logger_blocklist = [
+        "telethon",
+    ]
+
+    for module in logger_blocklist:
+        logging.getLogger(module).setLevel(logging.INFO)
 
 
 def init_logging():
@@ -83,6 +92,8 @@ def init_logging():
         os.makedirs(LOGS_DIR)
 
     dictConfig(log_config)
+
+    filter_external_logs()
 
     # start a thread for a queue handler so it doesn't block useful work
     queue_handler = logging.getHandlerByName("queue_handler")
