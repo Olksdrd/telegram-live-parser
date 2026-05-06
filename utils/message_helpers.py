@@ -85,18 +85,25 @@ get_custom_emoji_alt = cache_custom_emoji_requests()
 
 async def get_reaction_type(client: TelegramClient, reaction_obj: ReactionCount) -> str:
     """
-    There are two distinct type of reactions in Telegram:
-    - ordinary utf-8/16 emoticons
-    - custom png/webp reactions, enabled on some channels.
+    There are several distinct type of reactions in Telegram:
+    - ReactionEmoji: ordinary utf-8/16 emoticons
+    - ReactionCustomEmoji: custom png/webp reactions, enabled on some channels.
+    - ReactionPaid
+    - ReactionEmpty
 
-    Custom ones are marked by * to prevent collisions with ordinary emoticons.
+    CustomEmoji alt's are marked by * to prevent collisions with ordinary emoticons.
     """
     try:
-        return reaction_obj.reaction.emoticon
-    except AttributeError:
-        custom_reaction_id = reaction_obj.reaction.document_id
-        reaction = await get_custom_emoji_alt(client, custom_reaction_id)
-        return f'*{reaction}'
+        return reaction_obj.reaction.emoticon  # ReactionEmoji case
+    except AttributeError as e:
+        if 'ReactionCustomEmoji' in str(e):
+            custom_reaction_id = reaction_obj.reaction.document_id
+            reaction = await get_custom_emoji_alt(client, custom_reaction_id)
+            return f'*{reaction}'
+        elif 'ReactionPaid' in str(e):
+            return 'Paid'
+        else:
+            return 'Empty'  # ReactionEmpty case
 
 
 async def unwrap_reactions(
