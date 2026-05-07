@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any, Self, TypedDict
 from telethon import TelegramClient, functions
 from telethon.utils import resolve_id
 
-from utils.channel_helpers import get_compact_name, query_entity_info
+from tgparse.utils.channel_helpers import get_compact_name, query_entity_info
 
 if TYPE_CHECKING:
     from collections.abc import Callable

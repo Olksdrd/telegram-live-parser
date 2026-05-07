@@ -8,6 +8,9 @@ dependencies = [
     "telethon>=1.43.2",
 ]
 
+[project.scripts]
+tgparse = "tgparse.main:main"
+
 [dependency-groups]
 mongo = [
     "mongoengine>=0.27.0",

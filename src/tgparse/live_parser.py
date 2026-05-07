@@ -5,14 +5,14 @@ import os
 from telethon.events import NewMessage
 from typing import TYPE_CHECKING
 
-from utils.logging import init_logging
-from utils.parser_helpers import get_chats_to_parse, get_message_repository, get_telegram_client
-from utils.message_helpers import MessageBuilder
+from tgparse.utils.logging import init_logging
+from tgparse.utils.parser_helpers import get_chats_to_parse, get_message_repository, get_telegram_client
+from tgparse.utils.message_helpers import MessageBuilder
 
 if TYPE_CHECKING:
     from telethon import TelegramClient
 
-    from utils.repo.interface import Repository
+    from tgparse.utils.repo.interface import Repository
 
 logger = logging.getLogger(__name__)
 

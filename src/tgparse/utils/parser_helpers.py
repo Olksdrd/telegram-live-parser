@@ -5,7 +5,7 @@ from telethon import TelegramClient
 
 from typing import TYPE_CHECKING
 
-from utils.repo.interface import Repository, repository_factory
+from tgparse.utils.repo.interface import Repository, repository_factory
 
 if TYPE_CHECKING:
     from utils.channel_helpers import TypeCompact

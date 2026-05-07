@@ -56,7 +56,7 @@ def repository_factory(
     # allows to avoid installing unnecessary dependencies
     # ! repo_type should be one of the options from the Enum above
     # load corresponding module from .utils/repo directory
-    repo_module = importlib.import_module(f'utils.repo.{repo_type.lower()}')
+    repo_module = importlib.import_module(f'tgparse.utils.repo.{repo_type.lower()}')
     # get repository class by name
     repo = getattr(repo_module, f'{repo_type.capitalize()}Repository')
     # unused kwargs will be ignored
