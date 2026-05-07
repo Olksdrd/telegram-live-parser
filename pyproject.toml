@@ -5,13 +5,13 @@ description = "Telegram parsers"
 readme = "README.md"
 requires-python = "==3.14.*"
 dependencies = [
-    "telethon==1.43.2",
+    "telethon>=1.43.2",
 ]
 
 [dependency-groups]
 mongo = [
-    "mongoengine==0.27.0",
-    "pymongo==4.8.0",
+    "mongoengine>=0.27.0",
+    "pymongo>=4.8.0",
     "telemongo>=0.2.2",
 ]
 

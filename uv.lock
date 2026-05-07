@@ -101,11 +101,11 @@ mongo = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "telethon", specifier = "==1.43.2" }]
+requires-dist = [{ name = "telethon", specifier = ">=1.43.2" }]
 
 [package.metadata.requires-dev]
 mongo = [
-    { name = "mongoengine", specifier = "==0.27.0" },
-    { name = "pymongo", specifier = "==4.8.0" },
+    { name = "mongoengine", specifier = ">=0.27.0" },
+    { name = "pymongo", specifier = ">=4.8.0" },
     { name = "telemongo", specifier = ">=0.2.2" },
 ]
