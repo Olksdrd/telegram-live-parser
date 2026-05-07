@@ -1,6 +1,6 @@
 version = 1
 revision = 3
-requires-python = "==3.14.4"
+requires-python = "==3.14.*"
 
 [[package]]
 name = "dnspython"
@@ -48,15 +48,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/05/2c/ad0896cb94668c3cad1eb702ab60ae17036b051f54cfe547f11a0322f1d3/pymongo-4.8.0.tar.gz", hash = "sha256:454f2295875744dc70f1881e4b2eb99cdad008a33574bc8aaf120530f66c0cde", size = 1506091, upload-time = "2024-06-26T18:47:33.312Z" }
 
 [[package]]
-name = "python-dotenv"
-version = "1.2.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/82/ed/0301aeeac3e5353ef3d94b6ec08bbcabd04a72018415dcb29e588514bba8/python_dotenv-1.2.2.tar.gz", hash = "sha256:2c371a91fbd7ba082c2c1dc1f8bf89ca22564a087c2c287cd9b662adde799cf3", size = 50135, upload-time = "2026-03-01T16:00:26.196Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/0b/d7/1959b9648791274998a9c3526f6d0ec8fd2233e4d4acce81bbae76b44b2a/python_dotenv-1.2.2-py3-none-any.whl", hash = "sha256:1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a", size = 22101, upload-time = "2026-03-01T16:00:25.09Z" },
-]
-
-[[package]]
 name = "rsa"
 version = "4.9.1"
 source = { registry = "https://pypi.org/simple" }
@@ -66,35 +57,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/da/8a/22b7beea3ee0d44b1916c0c1cb0ee3af23b700b6da9f04991899d0c555d4/rsa-4.9.1.tar.gz", hash = "sha256:e7bdbfdb5497da4c07dfd35530e1a902659db6ff241e39d9953cad06ebd0ae75", size = 29034, upload-time = "2025-04-16T09:51:18.218Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/64/8d/0133e4eb4beed9e425d9a98ed6e081a55d195481b7632472be1af08d2f6b/rsa-4.9.1-py3-none-any.whl", hash = "sha256:68635866661c6836b8d39430f97a996acbd61bfa49406748ea243539fe239762", size = 34696, upload-time = "2025-04-16T09:51:17.142Z" },
-]
-
-[[package]]
-name = "telegram-live-parser"
-version = "0.1.0"
-source = { virtual = "." }
-dependencies = [
-    { name = "python-dotenv" },
-    { name = "telethon" },
-]
-
-[package.dev-dependencies]
-mongo = [
-    { name = "mongoengine" },
-    { name = "pymongo" },
-    { name = "telemongo" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "python-dotenv", specifier = "==1.2.2" },
-    { name = "telethon", specifier = "==1.43.2" },
-]
-
-[package.metadata.requires-dev]
-mongo = [
-    { name = "mongoengine", specifier = "==0.27.0" },
-    { name = "pymongo", specifier = "==4.8.0" },
-    { name = "telemongo", specifier = ">=0.2.2" },
 ]
 
 [[package]]
@@ -121,4 +83,29 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/f5/f2/946ea3ca34740ea3bcb6033e44635e35058da5b1f349f99ba7c5b05b7296/telethon-1.43.2.tar.gz", hash = "sha256:794912eb546eacfe351ca7bf097b029f963da95985a07490653a99bf98219957", size = 687158, upload-time = "2026-04-20T08:06:42.044Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/37/85/53197127a93fd23a0ec7367a125939cb8c6cc23f0f9f2c0a04692f3ab51d/telethon-1.43.2-py3-none-any.whl", hash = "sha256:7e8a23a08f8474f3ac0c46847f3edd4e965b4452de0ba868b089acbad8041aa4", size = 773609, upload-time = "2026-04-20T08:06:44.496Z" },
+]
+
+[[package]]
+name = "tgparse"
+version = "0.1.0"
+source = { editable = "." }
+dependencies = [
+    { name = "telethon" },
+]
+
+[package.dev-dependencies]
+mongo = [
+    { name = "mongoengine" },
+    { name = "pymongo" },
+    { name = "telemongo" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "telethon", specifier = "==1.43.2" }]
+
+[package.metadata.requires-dev]
+mongo = [
+    { name = "mongoengine", specifier = "==0.27.0" },
+    { name = "pymongo", specifier = "==4.8.0" },
+    { name = "telemongo", specifier = ">=0.2.2" },
 ]
