@@ -2,9 +2,10 @@ import atexit
 import logging
 import os
 from logging.config import dictConfig
-from typing import override
+from typing import Any, override
 
 LOGS_DIR = './logs/'
+CONTAINER_RUNTIME = True if os.getenv('CONTAINER_RUNTIME') == 'true' else False
 
 
 class InfoFilter(logging.Filter):
@@ -16,81 +17,85 @@ class InfoFilter(logging.Filter):
         return record.levelno <= logging.INFO
 
 
-handlers_list = ['stdout', 'stderr', 'file']
+def generate_log_config() -> dict[str, Any]:
+    handlers_list = ['stdout', 'stderr', 'file']
 
-handlers = {
-    'stdout': {
-        'class': 'logging.StreamHandler',
-        'formatter': 'standard',
-        'level': 'INFO',
-        'stream': 'ext://sys.stdout',
-        'filters': ['info'],
-    },
-    'stderr': {
-        'class': 'logging.StreamHandler',
-        'formatter': 'standard',
-        'level': 'WARNING',
-        'stream': 'ext://sys.stderr',
-    },
-    'file': {
-        'class': 'logging.handlers.RotatingFileHandler',
-        'formatter': 'detailed',
-        'level': 'DEBUG',
-        'filename': f'{LOGS_DIR}/logfile.log',
-        'maxBytes': 10_000_000,  # 10 Mb
-        'backupCount': 5,
-    },
-    'queue_handler': {  # needs Python>=3.12
-        'class': 'logging.handlers.QueueHandler',
-        'handlers': handlers_list,
-        'respect_handler_level': True,
-    },
-}
-
-if os.getenv('HOME') == '/home/docker':
-    handlers.pop('file')
-    handlers_list.remove('file')
-
-
-log_config = {
-    'version': 1,  # the only possible value
-    'disable_existing_loggers': False,
-    'filters': {
-        'info': {
-            '()': InfoFilter,
+    handlers_specification = {
+        'stdout': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+            'level': 'INFO',
+            'stream': 'ext://sys.stdout',
+            'filters': ['info'],
         },
-    },
-    'formatters': {
-        'standard': {'format': '%(asctime)s [%(levelname)s]: %(message)s'},
-        'detailed': {
-            'format': '%(asctime)s [%(levelname)s|%(module)s|L%(lineno)s]: %(message)s',
-            'datefmt': '%Y-%m-%dT%H:%M:%S%z',
+        'stderr': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'standard',
+            'level': 'WARNING',
+            'stream': 'ext://sys.stderr',
         },
-    },
-    'handlers': handlers,
-    'loggers': {
-        'root': {
-            'handlers': ['queue_handler'],
+        'file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'formatter': 'detailed',
             'level': 'DEBUG',
-            'propagate': True,
+            'filename': f'{LOGS_DIR}/logfile.log',
+            'maxBytes': 10_000_000,  # 10 Mb
+            'backupCount': 5,
         },
-    },
-}
+        'queue_handler': {  # needs Python>=3.12
+            'class': 'logging.handlers.QueueHandler',
+            'handlers': handlers_list,
+            'respect_handler_level': True,
+        },
+    }
+
+    # no point in a logfile inside a container
+    if CONTAINER_RUNTIME:
+        handlers_specification.pop('file')
+        handlers_list.remove('file')
+
+    log_config = {
+        'version': 1,  # the only possible value
+        'disable_existing_loggers': False,
+        'filters': {
+            'info': {
+                '()': InfoFilter,
+            },
+        },
+        'formatters': {
+            'standard': {'format': '%(asctime)s [%(levelname)s]: %(message)s'},
+            'detailed': {
+                'format': '%(asctime)s [%(levelname)s|%(module)s|L%(lineno)s]: %(message)s',
+                'datefmt': '%Y-%m-%dT%H:%M:%S%z',
+            },
+        },
+        'handlers': handlers_specification,
+        'loggers': {
+            'root': {
+                'handlers': ['queue_handler'],
+                'level': 'DEBUG',
+                'propagate': True,
+            },
+        },
+    }
+    return log_config
 
 
 def filter_external_logs() -> None:
-    logger_blocklist = [
-        'telethon',
-    ]
+    logger_blocklist = {
+        'asyncio': logging.INFO,
+        'telethon': logging.INFO,
+    }
 
-    for module in logger_blocklist:
-        logging.getLogger(module).setLevel(logging.INFO)
+    for module, min_log_level in logger_blocklist.items():
+        logging.getLogger(module).setLevel(min_log_level)
 
 
-def init_logging():
+def init_logging() -> None:
     if not os.path.exists(LOGS_DIR):
         os.makedirs(LOGS_DIR)
 
+    log_config = generate_log_config()
     dictConfig(log_config)
 
     filter_external_logs()
