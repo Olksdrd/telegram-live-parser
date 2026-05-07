@@ -6,7 +6,7 @@ import contextlib
 from typing import TYPE_CHECKING
 
 from utils.logging import init_logging
-from utils.parser_helpers import get_chats_to_parse, get_message_repo, get_telegram_client
+from utils.parser_helpers import get_chats_to_parse, get_message_repository, get_telegram_client
 from utils.message_helpers import MessageBuilder
 
 if TYPE_CHECKING:
@@ -49,9 +49,9 @@ async def parse_channel(
 
 
 async def amain() -> None:
-    dialogs = get_chats_to_parse()
+    chats = get_chats_to_parse()
 
-    message_repository = get_message_repo()
+    message_repository = get_message_repository()
 
     client = get_telegram_client(session_type=os.getenv('SESSION_DB_TYPE'))
     client.loop.set_debug(True)
@@ -67,12 +67,12 @@ async def amain() -> None:
             'extract_forward_info',
         ],
         client=client,
-        chats=dialogs,
+        chats=chats,
     )
 
     # not the most effective async :(
-    for dialog in dialogs:
-        await parse_channel(client, message_repository, builder, dialog['id'])
+    for chat in chats:
+        await parse_channel(client, message_repository, builder, chat['id'])
 
     message_repository.disconnect()
 

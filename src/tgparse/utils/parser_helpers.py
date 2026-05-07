@@ -13,10 +13,10 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def get_message_repo() -> Repository:
+def get_message_repository(repo_type: str, table_name: str) -> Repository:
     message_repository = repository_factory(
-        repo_type=os.getenv('MESSAGE_REPO'),
-        table_name=os.getenv('MESSAGE_TABLE'),
+        repo_type=repo_type,
+        table_name=table_name,
         collection_name=os.getenv('MESSAGE_COLLECTION'),
         user=os.getenv('DB_USER'),
         passwd=os.getenv('DB_PASSWD'),
@@ -27,23 +27,23 @@ def get_message_repo() -> Repository:
     return message_repository
 
 
-def get_channel_repo() -> Repository:
-    channel_repository = repository_factory(
-        repo_type=os.getenv('CHANNEL_REPO'),
-        table_name=os.getenv('CHANNEL_TABLE'),
-        collection_name=os.getenv('CHANNEL_COLLECTION'),
+def get_chats_repository(repo_type: str, table_name: str) -> Repository:
+    chats_repository = repository_factory(
+        repo_type=repo_type,
+        table_name=table_name,
+        collection_name=os.getenv('CHATS_COLLECTION'),
         user=os.getenv('DB_USER'),
         passwd=os.getenv('DB_PASSWD'),
         ip=os.getenv('DB_IP'),
         port=os.getenv('DB_PORT'),
     )
-    channel_repository.connect()
-    return channel_repository
+    chats_repository.connect()
+    return chats_repository
 
 
-def get_chats_to_parse() -> list[TypeCompact]:
+def get_chats_to_parse(repo_type: str, table_name: str) -> list[TypeCompact]:
     logger.info('Fetching channels list...')
-    chats_repository = get_channel_repo()
+    chats_repository = get_chats_repository(repo_type, table_name)
     chats = chats_repository.get_all()
     chats_repository.disconnect()
     logger.info('Channels list loaded.')

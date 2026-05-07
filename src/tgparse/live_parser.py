@@ -6,7 +6,7 @@ from telethon.events import NewMessage
 from typing import TYPE_CHECKING
 
 from utils.logging import init_logging
-from utils.parser_helpers import get_chats_to_parse, get_message_repo, get_telegram_client
+from utils.parser_helpers import get_chats_to_parse, get_message_repository, get_telegram_client
 from utils.message_helpers import MessageBuilder
 
 if TYPE_CHECKING:
@@ -52,12 +52,16 @@ async def live_parser(
     await tg_client.run_until_disconnected()
 
 
-def main() -> None:
-    chats = get_chats_to_parse()
-
-    message_repository = get_message_repo()
-
-    tg_client = get_telegram_client(session_type=os.getenv('SESSION_DB_TYPE'))
+def start_live_parser(
+    session_backend: str,
+    chats_repository: str,
+    chats_path: str,
+    message_repository: str,
+    output_path: str,
+) -> None:
+    chats = get_chats_to_parse(repo_type=chats_repository, table_name=chats_path)
+    message_repository = get_message_repository(repo_type=message_repository, table_name=output_path)
+    tg_client = get_telegram_client(session_type=session_backend)
 
     # handle SIGINT without an error message from asyncio
     try:
@@ -71,4 +75,10 @@ def main() -> None:
 if __name__ == '__main__':
     init_logging()
 
-    main()
+    start_live_parser(
+        session_backend=os.getenv('SESSION_DB_TYPE'),
+        chats_repository=os.getenv('CHATS_REPO'),
+        chats_path=os.getenv('CHATS_TABLE'),
+        message_repository=os.getenv('MESSAGE_REPO'),
+        output_path=os.getenv('MESSAGE_TABLE'),
+    )

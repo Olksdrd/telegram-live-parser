@@ -4,7 +4,7 @@ import logging
 import os
 
 from utils.logging import init_logging
-from utils.parser_helpers import get_channel_repo, get_telegram_client
+from utils.parser_helpers import get_chats_repository, get_telegram_client
 from utils.channel_helpers import (
     get_non_subscription_entities,
     get_subscriptions_list,
@@ -22,7 +22,7 @@ def configure() -> list[str]:
 async def amain() -> None:
     non_subscribed_channels = configure()
 
-    repository = get_channel_repo()
+    repository = get_chats_repository()
 
     client = get_telegram_client(session_type=os.getenv('SESSION_DB_TYPE'))
 
