@@ -1,15 +1,13 @@
 import logging
 import os
-import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
 from telethon import TelegramClient
 
-sys.path.insert(0, os.getcwd())
 from typing import TYPE_CHECKING
 
-from utils.repo.interface import Repository, repository_factory  # noqa: E402
+from utils.repo.interface import Repository, repository_factory
 
 if TYPE_CHECKING:
     from utils.channel_helpers import TypeCompact

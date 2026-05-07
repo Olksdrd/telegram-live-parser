@@ -1,6 +1,4 @@
 import logging
-import os
-import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Self, TypedDict
 
@@ -8,8 +6,7 @@ from dotenv import load_dotenv
 from telethon import TelegramClient, functions
 from telethon.utils import resolve_id
 
-sys.path.insert(0, os.getcwd())
-from utils.channel_helpers import get_compact_name, query_entity_info  # noqa: E402
+from utils.channel_helpers import get_compact_name, query_entity_info
 
 if TYPE_CHECKING:
     from collections.abc import Callable

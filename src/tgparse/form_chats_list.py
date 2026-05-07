@@ -2,15 +2,13 @@ import asyncio
 import json
 import logging
 import os
-import sys
 from pathlib import Path
 
 from dotenv import load_dotenv
 
-sys.path.insert(0, os.getcwd())
-from configs.logging import init_logging  # noqa: E402
-from parser_helpers import get_channel_repo, get_telegram_client  # noqa: E402
-from utils.channel_helpers import (  # noqa: E402
+from utils.logging import init_logging
+from utils.parser_helpers import get_channel_repo, get_telegram_client
+from utils.channel_helpers import (
     get_non_subscription_entities,
     get_subscriptions_list,
 )

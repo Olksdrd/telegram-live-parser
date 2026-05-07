@@ -1,16 +1,13 @@
 import asyncio
 import logging
 import os
-import sys
 
 from telethon.events import NewMessage
-
-sys.path.insert(0, os.getcwd())
 from typing import TYPE_CHECKING
 
-from configs.logging import init_logging  # noqa: E402
-from parser_helpers import get_chats_to_parse, get_message_repo, get_telegram_client  # noqa: E402
-from utils.message_helpers import MessageBuilder  # noqa: E402
+from utils.logging import init_logging
+from utils.parser_helpers import get_chats_to_parse, get_message_repo, get_telegram_client
+from utils.message_helpers import MessageBuilder
 
 if TYPE_CHECKING:
     from telethon import TelegramClient
