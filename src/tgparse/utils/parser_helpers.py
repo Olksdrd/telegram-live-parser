@@ -1,8 +1,6 @@
 import logging
 import os
-from pathlib import Path
 
-from dotenv import load_dotenv
 from telethon import TelegramClient
 
 from typing import TYPE_CHECKING
@@ -13,8 +11,6 @@ if TYPE_CHECKING:
     from utils.channel_helpers import TypeCompact
 
 logger = logging.getLogger(__name__)
-
-load_dotenv(dotenv_path=Path(os.getenv('CONFIG_PATH')))
 
 
 def get_message_repo() -> Repository:

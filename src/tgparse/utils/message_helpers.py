@@ -1,8 +1,6 @@
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Self, TypedDict
 
-from dotenv import load_dotenv
 from telethon import TelegramClient, functions
 from telethon.utils import resolve_id
 
@@ -20,8 +18,6 @@ if TYPE_CHECKING:
         MessageReplies,
         ReactionCount,
     )
-
-load_dotenv(dotenv_path=Path('./env/config.env'))
 
 logger = logging.getLogger(__name__)
 

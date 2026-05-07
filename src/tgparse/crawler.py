@@ -1,11 +1,8 @@
 import json
 import os
-import sys
 
-from dotenv import load_dotenv
 from telethon import TelegramClient
 
-sys.path.insert(0, os.getcwd())
 from utils.channel_helpers import (  # noqa: E402
     TypeCompact,
     entitity_info_request,
@@ -44,8 +41,6 @@ async def amain(
 if __name__ == '__main__':
     with open('./tg-keys.json') as f:
         keys = json.load(f)
-
-    load_dotenv('./env/congig.env')
 
     repository = repository_factory(
         repo_type=os.getenv('REPOSITORY_TYPE'),

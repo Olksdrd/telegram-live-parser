@@ -2,9 +2,6 @@ import asyncio
 import json
 import logging
 import os
-from pathlib import Path
-
-from dotenv import load_dotenv
 
 from utils.logging import init_logging
 from utils.parser_helpers import get_channel_repo, get_telegram_client
@@ -17,8 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 def configure() -> list[str]:
-    load_dotenv(dotenv_path=Path('./env/config.env'))
-
     with open(os.getenv('NON_SUBBED_CHANNELS_LIST')) as f:
         non_subscribed_channels = json.load(f)
     return list(set(non_subscribed_channels))
