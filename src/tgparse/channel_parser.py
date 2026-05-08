@@ -6,8 +6,9 @@ from typing import TYPE_CHECKING
 from tgparse.utils.logging import init_logging
 from tgparse.utils.message_helpers import MessageBuilder
 from tgparse.utils.parser_helpers import (
+    RepoSpec,
     get_chats_to_parse,
-    get_message_repository,
+    get_repository,
     get_telegram_client,
 )
 
@@ -81,19 +82,14 @@ async def history_parser(
 
 def start_history_parser(
     session_backend: str,
-    chats_repository: str,
-    chats_path: str,
-    message_repository: str,
-    output_path: str,
+    chats_repo_spec: RepoSpec,
+    messages_repo_spec: RepoSpec,
 ) -> None:
-    chats = get_chats_to_parse(repo_type=chats_repository, table_name=chats_path)
+    chats = get_chats_to_parse(chats_repo_spec)
     if not chats:
         logger.error('No chats to parse, exiting...')
         raise SystemExit(100)
-    message_repository = get_message_repository(
-        repo_type=message_repository,
-        table_name=output_path,
-    )
+    message_repository = get_repository(messages_repo_spec)
     tg_client = get_telegram_client(session_type=session_backend)
 
     # handle SIGINT without an error message from asyncio
@@ -110,8 +106,6 @@ if __name__ == '__main__':
 
     start_history_parser(
         session_backend=os.getenv('SESSION_DB_TYPE'),
-        chats_repository=os.getenv('CHATS_REPO'),
-        chats_path=os.getenv('CHATS_TABLE'),
-        message_repository=os.getenv('MESSAGE_REPO'),
-        output_path=os.getenv('MESSAGE_TABLE'),
+        chats_repo_spec=RepoSpec(os.getenv('CHATS_REPO'), os.getenv('CHATS_TABLE')),
+        messages_repo_spec=RepoSpec(os.getenv('MESSAGE_REPO'), os.getenv('MESSAGE_TABLE')),
     )

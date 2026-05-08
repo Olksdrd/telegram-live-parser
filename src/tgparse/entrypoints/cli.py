@@ -6,6 +6,7 @@ from tgparse.channel_parser import start_history_parser
 from tgparse.form_chats_list import start_chat_metadata_parser
 from tgparse.live_parser import start_live_parser
 from tgparse.utils.logging import init_logging
+from tgparse.utils.parser_helpers import RepoSpec
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -124,24 +125,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         case 'live':
             start_live_parser(
                 session_backend=args.backend,
-                chats_repository=args.chats_repository,
-                chats_path=args.input,
-                message_repository=args.repository,
-                output_path=args.output,
+                chats_repo_spec=RepoSpec(args.chats_repository, args.input),
+                messages_repo_spec=RepoSpec(args.repository, args.output),
             )
         case 'history':
             start_history_parser(
                 session_backend=args.backend,
-                chats_repository=args.chats_repository,
-                chats_path=args.input,
-                message_repository=args.repository,
-                output_path=args.output,
+                chats_repo_spec=RepoSpec(args.chats_repository, args.input),
+                messages_repo_spec=RepoSpec(args.repository, args.output),
             )
         case 'channel':
             start_chat_metadata_parser(
                 session_backend=args.backend,
-                chats_repository=args.chats_repository,
-                chats_path=args.output,
+                chats_repo_spec=RepoSpec(args.chats_repository, args.output),
                 additional_channels=args.additional_channels,
                 parse_subscriptions=args.parse_subscriptions,
             )

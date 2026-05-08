@@ -9,7 +9,11 @@ from tgparse.utils.channel_helpers import (
     get_subscriptions_list,
 )
 from tgparse.utils.logging import init_logging
-from tgparse.utils.parser_helpers import get_chats_repository, get_telegram_client
+from tgparse.utils.parser_helpers import (
+    RepoSpec,
+    get_repository,
+    get_telegram_client,
+)
 
 if TYPE_CHECKING:
     from telethon import TelegramClient
@@ -20,6 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 def load_channels_list(list_path: str) -> list[str]:
+    # TODO: make it work from STDIN
     if not list_path:
         return []
     with open(list_path) as f:
@@ -51,12 +56,11 @@ async def chat_metadata_parser(
 
 def start_chat_metadata_parser(
     session_backend: str,
-    chats_repository: str,
-    chats_path: str,
+    chats_repo_spec: RepoSpec,
     additional_channels=str,
     parse_subscriptions=bool,
 ) -> None:
-    repository = get_chats_repository(repo_type=chats_repository, table_name=chats_path)
+    repository = get_repository(chats_repo_spec)
     tg_client = get_telegram_client(session_type=session_backend)
 
     # handle SIGINT without an error message from asyncio
@@ -81,8 +85,7 @@ if __name__ == '__main__':
     parse_subcriptions = os.getenv('PARSE_SUBSCRIPTIONS') == 'yes'
     start_chat_metadata_parser(
         session_backend=os.getenv('SESSION_DB_TYPE'),
-        chats_repository=os.getenv('CHATS_REPO'),
-        chats_path=os.getenv('CHATS_TABLE'),
+        chats_repo_spec=RepoSpec(os.getenv('CHATS_REPO'), os.getenv('CHATS_TABLE')),
         additional_channels=os.getenv('NON_SUBBED_CHANNELS_LIST'),
         parse_subscriptions=parse_subcriptions,
     )
