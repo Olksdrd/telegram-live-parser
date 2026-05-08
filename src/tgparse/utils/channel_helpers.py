@@ -198,8 +198,8 @@ def cache_enitity_requests():
                 entity = None
             except ChannelPrivateError:
                 logger.warning(f'Either {name} is private or you have been banned.')
-                # NOTE: name here is just an ID: there is no channel name in MessageFwdHeader
-                # NOTE: but the name can be seen in telegram app
+                # NOTE: name here is just an ID: there is no channel name in
+                # MessageFwdHeader but the name can be seen in telegram app
                 entity = {'id': name, 'title': 'PRIVATE'}
 
             compact_entity = get_compact_entity(entity)

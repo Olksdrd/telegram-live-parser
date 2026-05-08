@@ -197,6 +197,8 @@ class MessageBuilder:
             msg_reactions=new_msg.reactions,
             client=self.client,
         )
+        if ('Paid' in self._msg['reactions']) or ('Unknown' in self._msg['reactions']) or ('Empty' in self._msg['reactions']):
+            logger.debug(f'{new_msg.reactions}: {self._msg['reactions']}')
         return self
 
     async def extract_forward_info(self, new_msg: Message) -> Self:
@@ -206,6 +208,8 @@ class MessageBuilder:
             self._msg['fwd_from'] = {
                 str(key): val for key, val in fwd_peer_info.items() if val is not None
             }
+            if fwd_peer_info.get('title') == 'PRIVATE':
+                logger.debug(f'{forwarded_from_peer}: {fwd_peer_info}')
         return self
 
     def build(self) -> CompactMessage:
