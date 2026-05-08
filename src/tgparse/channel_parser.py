@@ -5,20 +5,21 @@ import os
 import contextlib
 from typing import TYPE_CHECKING
 
-from utils.logging import init_logging
-from utils.parser_helpers import get_chats_to_parse, get_message_repository, get_telegram_client
-from utils.message_helpers import MessageBuilder
+from tgparse.utils.logging import init_logging
+from tgparse.utils.parser_helpers import get_chats_to_parse, get_message_repository, get_telegram_client
+from tgparse.utils.message_helpers import MessageBuilder
 
 if TYPE_CHECKING:
     from telethon import TelegramClient
     from telethon.hints import EntityLike
 
-    from utils.repo.interface import Repository
+    from tgparse.utils.channel_helpers import TypeCompact
+    from tgparse.utils.repo.interface import Repository
 
 logger = logging.getLogger(__name__)
 
 
-async def parse_channel(
+async def parse_channel_history(
     client: TelegramClient,
     message_repository: Repository,
     builder: MessageBuilder,
@@ -48,15 +49,14 @@ async def parse_channel(
     logger.info(f'{len(docs)} messages retreived.')
 
 
-async def amain() -> None:
-    chats = get_chats_to_parse()
-
-    message_repository = get_message_repository()
-
-    client = get_telegram_client(session_type=os.getenv('SESSION_DB_TYPE'))
-    client.loop.set_debug(True)
-    await client.connect()
-    await client.get_dialogs()  # NOTE: needed so that parsing by ID works
+async def history_parser(
+    chats: list[TypeCompact],
+    message_repository: Repository,
+    tg_client: TelegramClient,
+) -> None:
+    tg_client.loop.set_debug(True)
+    await tg_client.connect()
+    await tg_client.get_dialogs()  # NOTE: needed so that parsing by ID works
     logger.info('Telegram Client started.')
 
     builder = MessageBuilder(
@@ -66,19 +66,42 @@ async def amain() -> None:
             'extract_engagements',
             'extract_forward_info',
         ],
-        client=client,
+        client=tg_client,
         chats=chats,
     )
 
     # not the most effective async :(
     for chat in chats:
-        await parse_channel(client, message_repository, builder, chat['id'])
+        await parse_channel_history(tg_client, message_repository, builder, chat['id'])
 
-    message_repository.disconnect()
+
+def start_history_parser(
+    session_backend: str,
+    chats_repository: str,
+    chats_path: str,
+    message_repository: str,
+    output_path: str,
+) -> None:
+    chats = get_chats_to_parse(repo_type=chats_repository, table_name=chats_path)
+    message_repository = get_message_repository(repo_type=message_repository, table_name=output_path)
+    tg_client = get_telegram_client(session_type=session_backend)
+
+    # handle SIGINT without an error message from asyncio
+    try:
+        asyncio.run(history_parser(chats, message_repository, tg_client))
+    except KeyboardInterrupt:
+        pass  # TelegramClient connection autocloses on SIGINT
+    finally:
+        message_repository.disconnect()
 
 
 if __name__ == '__main__':
     init_logging()
 
-    with contextlib.suppress(KeyboardInterrupt):
-        asyncio.run(amain())
+    start_history_parser(
+        session_backend=os.getenv('SESSION_DB_TYPE'),
+        chats_repository=os.getenv('CHATS_REPO'),
+        chats_path=os.getenv('CHATS_TABLE'),
+        message_repository=os.getenv('MESSAGE_REPO'),
+        output_path=os.getenv('MESSAGE_TABLE'),
+    )
