@@ -1,7 +1,9 @@
 """Good for printing a dozen of messages to STDOUT for quick testing."""
 
+import fcntl
 import json
 import logging
+import os
 import sys
 from typing import TYPE_CHECKING
 
@@ -47,6 +49,13 @@ class CliRepository:
     #     pass
 
     def get_all(self) -> list[Mapping]:
-        # ? read from STDIN?
-        msg = 'How is it supposed to work?'
-        raise Exception(msg)
+        # NOTE: don't wait for input if it's not provided at the beginning
+        # See: https://stackoverflow.com/questions/26263636/how-to-check-potentially-empty-stdin-without-waiting-for-input  # noqa F501
+        fd: int = sys.stdin.fileno()
+        old_flags: int = fcntl.fcntl(fd, fcntl.F_GETFL)
+        fcntl.fcntl(fd, fcntl.F_SETFL, old_flags | os.O_NONBLOCK)
+        input_text = sys.stdin.buffer.raw.read()
+        input_obj = json.loads(input_text)
+        if type(input_obj) is not list:
+            input_obj = [input_obj]
+        return input_obj
