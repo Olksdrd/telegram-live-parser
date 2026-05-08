@@ -73,6 +73,7 @@ async def history_parser(
     # not the most effective async :(
     for chat in chats:
         await parse_channel_history(tg_client, message_repository, builder, chat['id'])
+        await asyncio.sleep(2)
 
 
 def start_history_parser(
