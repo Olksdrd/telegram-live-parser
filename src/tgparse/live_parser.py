@@ -1,13 +1,17 @@
 import asyncio
 import logging
 import os
-
-from telethon.events import NewMessage
 from typing import TYPE_CHECKING
 
+from telethon.events import NewMessage
+
 from tgparse.utils.logging import init_logging
-from tgparse.utils.parser_helpers import get_chats_to_parse, get_message_repository, get_telegram_client
 from tgparse.utils.message_helpers import MessageBuilder
+from tgparse.utils.parser_helpers import (
+    get_chats_to_parse,
+    get_message_repository,
+    get_telegram_client,
+)
 
 if TYPE_CHECKING:
     from telethon import TelegramClient
@@ -67,7 +71,10 @@ def start_live_parser(
     output_path: str,
 ) -> None:
     chats = get_chats_to_parse(repo_type=chats_repository, table_name=chats_path)
-    message_repository = get_message_repository(repo_type=message_repository, table_name=output_path)
+    message_repository = get_message_repository(
+        repo_type=message_repository,
+        table_name=output_path,
+    )
     tg_client = get_telegram_client(session_type=session_backend)
 
     # handle SIGINT without an error message from asyncio

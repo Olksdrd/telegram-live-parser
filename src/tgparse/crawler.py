@@ -2,13 +2,12 @@ import json
 import os
 
 from telethon import TelegramClient
-
-from utils.channel_helpers import (  # noqa: E402
+from utils.channel_helpers import (
     TypeCompact,
     entitity_info_request,
     get_peer_id,
 )
-from utils.repo.interface import Repository, repository_factory  # noqa: E402
+from utils.repo.interface import Repository, repository_factory
 
 
 async def amain(

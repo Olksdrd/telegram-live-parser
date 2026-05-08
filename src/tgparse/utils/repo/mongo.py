@@ -74,4 +74,3 @@ class MongoRepository:
 
     def get_all(self) -> list[Mapping]:
         return list(self.collection.find())
-

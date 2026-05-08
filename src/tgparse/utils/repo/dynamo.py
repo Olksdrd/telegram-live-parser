@@ -39,4 +39,4 @@ class DynamoRepository:
     def put_one(self, message: Mapping) -> str:
         document = self._convert_message_to_document(message)
         response = self.client.put_item(TableName=self.table_name, Item=document)
-        return f'Response status: {response["ResponseMetadata"]["HTTPStatusCode"]}.'  # noqa: E501
+        return f'Response status: {response["ResponseMetadata"]["HTTPStatusCode"]}.'

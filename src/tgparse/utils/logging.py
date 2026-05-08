@@ -5,7 +5,7 @@ from logging.config import dictConfig
 from typing import Any, override
 
 LOGS_DIR = './logs/'
-CONTAINER_RUNTIME = True if os.getenv('CONTAINER_RUNTIME') == 'true' else False
+CONTAINER_RUNTIME = os.getenv('CONTAINER_RUNTIME') == 'true'
 
 
 class InfoFilter(logging.Filter):
@@ -54,7 +54,7 @@ def generate_log_config(min_log_level: str) -> dict[str, Any]:
         handlers_specification.pop('file')
         handlers_list.remove('file')
 
-    log_config = {
+    return {
         'version': 1,  # the only possible value
         'disable_existing_loggers': False,
         'filters': {
@@ -78,7 +78,6 @@ def generate_log_config(min_log_level: str) -> dict[str, Any]:
             },
         },
     }
-    return log_config
 
 
 def filter_external_logs(min_log_level_num: int) -> None:

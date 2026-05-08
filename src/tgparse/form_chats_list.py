@@ -2,15 +2,14 @@ import asyncio
 import json
 import logging
 import os
-
 from typing import TYPE_CHECKING
 
-from tgparse.utils.logging import init_logging
-from tgparse.utils.parser_helpers import get_chats_repository, get_telegram_client
 from tgparse.utils.channel_helpers import (
     get_non_subscription_entities,
     get_subscriptions_list,
 )
+from tgparse.utils.logging import init_logging
+from tgparse.utils.parser_helpers import get_chats_repository, get_telegram_client
 
 if TYPE_CHECKING:
     from telethon import TelegramClient
@@ -62,12 +61,14 @@ def start_chat_metadata_parser(
 
     # handle SIGINT without an error message from asyncio
     try:
-        asyncio.run(chat_metadata_parser(
-            repository,
-            tg_client,
-            additional_channels,
-            parse_subscriptions,
-        ))
+        asyncio.run(
+            chat_metadata_parser(
+                repository,
+                tg_client,
+                additional_channels,
+                parse_subscriptions,
+            ),
+        )
     except KeyboardInterrupt:
         pass  # TelegramClient connection autocloses on SIGINT
     finally:
@@ -77,7 +78,7 @@ def start_chat_metadata_parser(
 if __name__ == '__main__':
     init_logging()
 
-    parse_subcriptions = True if os.getenv('PARSE_SUBSCRIPTIONS') == 'yes' else False
+    parse_subcriptions = os.getenv('PARSE_SUBSCRIPTIONS') == 'yes'
     start_chat_metadata_parser(
         session_backend=os.getenv('SESSION_DB_TYPE'),
         chats_repository=os.getenv('CHATS_REPO'),

@@ -1,12 +1,15 @@
 import asyncio
 import logging
 import os
-
 from typing import TYPE_CHECKING
 
 from tgparse.utils.logging import init_logging
-from tgparse.utils.parser_helpers import get_chats_to_parse, get_message_repository, get_telegram_client
 from tgparse.utils.message_helpers import MessageBuilder
+from tgparse.utils.parser_helpers import (
+    get_chats_to_parse,
+    get_message_repository,
+    get_telegram_client,
+)
 
 if TYPE_CHECKING:
     from telethon import TelegramClient
@@ -87,7 +90,10 @@ def start_history_parser(
     if not chats:
         logger.error('No chats to parse, exiting...')
         raise SystemExit(100)
-    message_repository = get_message_repository(repo_type=message_repository, table_name=output_path)
+    message_repository = get_message_repository(
+        repo_type=message_repository,
+        table_name=output_path,
+    )
     tg_client = get_telegram_client(session_type=session_backend)
 
     # handle SIGINT without an error message from asyncio

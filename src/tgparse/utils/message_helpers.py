@@ -93,10 +93,9 @@ async def get_reaction_type(client: TelegramClient, reaction_obj: ReactionCount)
             custom_reaction_id = reaction_obj.reaction.document_id
             reaction = await get_custom_emoji_alt(client, custom_reaction_id)
             return f'*{reaction}'
-        elif 'ReactionPaid' in str(e):
+        if 'ReactionPaid' in str(e):
             return 'Paid'
-        else:
-            return 'Empty'  # ReactionEmpty case
+        return 'Empty'  # ReactionEmpty case
 
 
 async def unwrap_reactions(
@@ -197,8 +196,12 @@ class MessageBuilder:
             msg_reactions=new_msg.reactions,
             client=self.client,
         )
-        if ('Paid' in self._msg['reactions']) or ('Unknown' in self._msg['reactions']) or ('Empty' in self._msg['reactions']):
-            logger.debug(f'{new_msg.reactions}: {self._msg['reactions']}')
+        if (
+            ('Paid' in self._msg['reactions'])
+            or ('Unknown' in self._msg['reactions'])
+            or ('Empty' in self._msg['reactions'])
+        ):
+            logger.debug(f'{new_msg.reactions}: {self._msg["reactions"]}')
         return self
 
     async def extract_forward_info(self, new_msg: Message) -> Self:

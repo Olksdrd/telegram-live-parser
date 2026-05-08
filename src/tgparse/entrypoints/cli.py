@@ -1,11 +1,14 @@
 import logging
 from argparse import ArgumentParser, Namespace
-from typing import Sequence
+from typing import TYPE_CHECKING
 
 from tgparse.channel_parser import start_history_parser
 from tgparse.form_chats_list import start_chat_metadata_parser
 from tgparse.live_parser import start_live_parser
 from tgparse.utils.logging import init_logging
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 logger = logging.getLogger(__name__)
 

@@ -1,9 +1,8 @@
 import logging
 import os
+from typing import TYPE_CHECKING
 
 from telethon import TelegramClient
-
-from typing import TYPE_CHECKING
 
 from tgparse.utils.repo.interface import Repository, repository_factory
 

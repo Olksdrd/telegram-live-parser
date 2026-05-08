@@ -65,4 +65,3 @@ class JsonRepository:
     def get_all(self) -> list[Mapping]:
         with open(self.output_path) as f:
             return json.load(f)
-
