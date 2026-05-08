@@ -23,10 +23,10 @@ class Repository[T](Protocol):
     def disconnect(self) -> None:
         pass
 
-    def put_one(self, object: T) -> str:
+    def put_one(self, datum: T) -> str:
         pass
 
-    def put_many(self, objects: list[T]) -> str:
+    def put_many(self, data: list[T]) -> str:
         pass
 
     # def get(self, id: str) -> T:

@@ -27,8 +27,8 @@ class CliRepository:
     def disconnect(self) -> None:
         logger.info('Database connection closed.')
 
-    def put_one(self, object: Mapping) -> str:
-        doc = {k: v for k, v in object.items() if v}
+    def put_one(self, datum: Mapping) -> str:
+        doc = {k: v for k, v in datum.items() if v}
         print(
             json.dumps(doc, default=str, ensure_ascii=False),
             flush=True,
@@ -36,8 +36,8 @@ class CliRepository:
         )
         return 'Processed 1 document.'
 
-    def put_many(self, objects: list[Mapping]) -> str:
-        docs = [{k: v for k, v in doc.items() if v} for doc in objects]
+    def put_many(self, data: list[Mapping]) -> str:
+        docs = [{k: v for k, v in doc.items() if v} for doc in data]
         print(
             json.dumps(docs, default=str, ensure_ascii=False),
             flush=True,
@@ -50,7 +50,7 @@ class CliRepository:
 
     def get_all(self) -> list[Mapping]:
         # NOTE: don't wait for input if it's not provided at the beginning
-        # See: https://stackoverflow.com/questions/26263636/how-to-check-potentially-empty-stdin-without-waiting-for-input  # noqa F501
+        # See: https://stackoverflow.com/questions/26263636/how-to-check-potentially-empty-stdin-without-waiting-for-input
         fd: int = sys.stdin.fileno()
         old_flags: int = fcntl.fcntl(fd, fcntl.F_GETFL)
         fcntl.fcntl(fd, fcntl.F_SETFL, old_flags | os.O_NONBLOCK)

@@ -237,8 +237,8 @@ def get_compact_entity(entity) -> dict:
 @get_compact_entity.register
 def _(entity: dict) -> dict:
     try:
-        id = get_peer_id(entity['id'], add_mark=False)
-        entity['id'] = id
+        peer_id = get_peer_id(entity['id'], add_mark=False)
+        entity['id'] = peer_id
     except AttributeError:
         pass
 

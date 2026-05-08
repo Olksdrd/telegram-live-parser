@@ -31,15 +31,15 @@ class JsonRepository:
     def disconnect(self) -> None:
         logger.info('Database connection closed.')
 
-    def put_one(self, object: Mapping) -> str:
-        doc = {k: v for k, v in object.items() if v}
+    def put_one(self, datum: Mapping) -> str:
+        doc = {k: v for k, v in datum.items() if v}
         if not doc:
             logger.warning('Document was empty. Skipping...')
             return None
         with open(self.output_path, mode='r+') as file:
             try:
                 # NOTE: doesn't read file into memory
-                # See: https://stackoverflow.com/questions/18087397/append-list-of-python-dictionaries-to-a-file-without-loading-it  # noqa F502
+                # See: https://stackoverflow.com/questions/18087397/append-list-of-python-dictionaries-to-a-file-without-loading-it  # noqa: E501
                 file.seek(0, 2)
                 position = file.tell() - 1
                 file.seek(position)
@@ -48,9 +48,9 @@ class JsonRepository:
                 file.write(f'[{json.dumps(doc, default=str, ensure_ascii=False)}]')
         return 'Saved 1 document.'
 
-    def put_many(self, objects: list[Mapping]) -> str:
+    def put_many(self, data: list[Mapping]) -> str:
         # WARN: overwrites the file!
-        docs = [{k: v for k, v in doc.items() if v} for doc in objects]
+        docs = [{k: v for k, v in doc.items() if v} for doc in data]
         non_empty_docs = [doc for doc in docs if doc]
         if docs != non_empty_docs:
             num_of_empty_docs = len(docs) - len(non_empty_docs)

@@ -52,16 +52,16 @@ class MongoRepository:
     def _convert_message_to_document(self, message: Mapping) -> dict:
         return {str(key): val for key, val in message.items() if val}
 
-    def put_one(self, object: Mapping) -> str:
-        document = self._convert_message_to_document(object)
+    def put_one(self, datum: Mapping) -> str:
+        document = self._convert_message_to_document(datum)
         if document:  # no need to put empty docs
             response = self.collection.insert_one(document)
             return f'Record ID: {response.inserted_id}.'
         logger.warning('Document was empty. Skipping inserting to MongoDB...')
         return 'Skipped empty'
 
-    def put_many(self, objects: list[Mapping]) -> str:
-        docs = [self._convert_message_to_document(msg) for msg in objects]
+    def put_many(self, data: list[Mapping]) -> str:
+        docs = [self._convert_message_to_document(msg) for msg in data]
         non_empty_docs = [doc for doc in docs if doc]  # filter out empty docs
         if docs != non_empty_docs:
             num_of_empty_docs = len(docs) - len(non_empty_docs)

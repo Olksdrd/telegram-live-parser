@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 @dataclass(frozen=True)
 class RepoSpec:
     repo_type: str
-    table_name: str
+    table_name: str | None
     collection_name: str | None = None
 
     def __post_init__(self) -> None:
@@ -47,13 +47,14 @@ def get_chats_to_parse(repo_spec: RepoSpec) -> list[TypeCompact]:
     return chats
 
 
-def get_telegram_client(session_type='sqlite') -> TelegramClient:
+def get_telegram_client(session_type: str = 'sqlite') -> TelegramClient:
     session_name = os.getenv('SESSION_NAME')
 
     if session_type == 'sqlite':
         session = session_name
     elif session_type == 'mongodb':
-        from utils.tg_helpers import get_telemongo_session  # NOTE: avoids unnecessary dependencies
+        # NOTE: avoids installing unnecessary dependencies
+        from tgparse.utils.tg_helpers import get_telemongo_session  # noqa: PLC0415
 
         session = get_telemongo_session(
             db=session_name,

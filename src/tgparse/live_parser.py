@@ -36,8 +36,7 @@ async def live_parser(
     @tg_client.on(
         NewMessage(
             chats=chat_ids,
-            # useful for testing: just send some message to yourself
-            # incoming=True,
+            # incoming=True,  # NOTE: for testing: just send some message to yourself
         ),
     )
     async def handler(event: NewMessage.Event) -> None:
@@ -50,7 +49,7 @@ async def live_parser(
             client=tg_client,
             chats=chats,
         )
-        # parse only messages with text, though images may also be of interest
+        # NOTE: parse only messages with text, though images may also be of interest
         if event.message.message != '':
             for method in builder.registered_methods:
                 await method(event.message)
@@ -58,7 +57,7 @@ async def live_parser(
 
             response = message_repository.put_one(document)
             logger.info(
-                f'Added message {document["msg_id"]} from chat {document["chat_id"]}. ' + response,
+                f'Added message {document["msg_id"]} from chat {document["chat_id"]}. {response}',
             )
 
     await tg_client.run_until_disconnected()
