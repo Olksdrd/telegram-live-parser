@@ -5,7 +5,7 @@ Useful for investigating parsing results and looking for edge cases.
 
 import json
 import logging
-import os
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -14,14 +14,15 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-class LocalRepository:
+class JsonRepository:
     def __init__(self, table_name: str | None = None, **kwargs) -> None:
-        self.path = f'./{table_name}.json'
+        self.output_path = Path(table_name).absolute()
 
     def connect(self) -> None:
         logger.info('Connecting to database...')
-        if not os.path.exists(self.path):
-            os.mknod(self.path)
+        if not self.output_path.exists():
+            self.output_path.parent.mkdir(parents=True, exist_ok=True)
+            self.output_path.touch(exist_ok=True)
         logger.info('Connection established.')
 
     def _is_connected(self) -> bool:
@@ -35,7 +36,7 @@ class LocalRepository:
         if not doc:
             logger.warning('Document was empty. Skipping...')
             return None
-        with open(self.path, mode='r+') as file:
+        with open(self.output_path, mode='r+') as file:
             try:
                 file.seek(0, 2)
                 position = file.tell() - 1
@@ -43,7 +44,7 @@ class LocalRepository:
                 file.write(f',{json.dumps(doc, default=str, ensure_ascii=False)}]')
             except ValueError:
                 file.write(f'[{json.dumps(doc, default=str, ensure_ascii=False)}]')
-        return '-' * 40
+        return 'Saved 1 document.'
 
     def put_many(self, objects: list[Mapping]) -> str:
         docs = [{k: v for k, v in doc.items() if v} for doc in objects]
@@ -51,14 +52,14 @@ class LocalRepository:
         if docs != non_empty_docs:
             num_of_empty_docs = len(docs) - len(non_empty_docs)
             logger.warning(f'Skipping {num_of_empty_docs} empty documents...')
-        with open(self.path, 'w') as f:
+        with open(self.output_path, 'w') as f:
             json.dump(non_empty_docs, f, default=str, ensure_ascii=False)
-        return f'Inserted {len(non_empty_docs)} documents.'
+        return f'Saved {len(non_empty_docs)} documents.'
 
     # def get(self, id: str) -> T:
     #     pass
 
     def get_all(self) -> list[Mapping]:
-        with open(self.path) as f:
+        with open(self.output_path) as f:
             return json.load(f)
 

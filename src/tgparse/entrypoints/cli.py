@@ -42,8 +42,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         '-c',
         '--chats-repository',
         help='Chats to repository backend',
-        default='local',
-        choices=['cli', 'local', 'mongodb'],
+        default='cli',
+        choices=['cli', 'json', 'mongodb'],
     )
     output_group = parent_parser.add_argument_group('Outputs')
     output_group.add_argument(
@@ -51,12 +51,11 @@ def main(argv: Sequence[str] | None = None) -> int:
         '--repository',
         help='Storage type for parsed data (default: %(default)s)',
         default='cli',
-        choices=['cli', 'local', 'parquet', 'mongodb'],
+        choices=['cli', 'json', 'mongodb'],
     )
     output_group.add_argument(
         '-o',
         '--output',
-        # TODO: remove file extension from local
         help='Output file (without file extension) or database table name',
         # TODO: disable this option for cli
     )

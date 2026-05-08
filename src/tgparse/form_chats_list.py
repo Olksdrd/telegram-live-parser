@@ -57,7 +57,6 @@ def start_chat_metadata_parser(
     additional_channels=str,
     parse_subscriptions=bool,
 ) -> None:
-    print('Starting')
     repository = get_chats_repository(repo_type=chats_repository, table_name=chats_path)
     tg_client = get_telegram_client(session_type=session_backend)
 

@@ -39,7 +39,7 @@ class Repository[T](Protocol):
 class RepositoryType(StrEnum):
     MONGODB = 'mongo'
     DYNAMODB = 'dynamo'
-    LOCAL_STORAGE = 'local'
+    JSON_STORAGE = 'json'
     CLI = 'cli'
 
 
