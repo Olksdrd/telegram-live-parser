@@ -1,4 +1,4 @@
-from tgparse.main import main
+from tgparse.entrypoints.cli import main
 
 
 if __name__ == '__main__':

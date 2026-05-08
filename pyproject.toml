@@ -9,7 +9,7 @@ dependencies = [
 ]
 
 [project.scripts]
-tgparse = "tgparse.main:main"
+tgparse = "tgparse.__main__:main"
 
 [dependency-groups]
 mongo = [
