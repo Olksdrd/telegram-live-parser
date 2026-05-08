@@ -2,6 +2,7 @@
 
 import json
 import logging
+import sys
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -26,12 +27,20 @@ class CliRepository:
 
     def put_one(self, object: Mapping) -> str:
         doc = {k: v for k, v in object.items() if v}
-        print(json.dumps(doc, default=str, ensure_ascii=False))
+        print(
+            json.dumps(doc, default=str, ensure_ascii=False),
+            flush=True,
+            file=sys.stdout,
+        )
         return '-' * 40
 
     def put_many(self, objects: list[Mapping]) -> str:
         docs = [{k: v for k, v in doc.items() if v} for doc in objects]
-        print(json.dumps(docs, default=str, ensure_ascii=False))
+        print(
+            json.dumps(docs, default=str, ensure_ascii=False),
+            flush=True,
+            file=sys.stdout,
+        )
         return '-' * 40
 
     # def get(self, id: str) -> T:
