@@ -2,7 +2,6 @@ import asyncio
 import logging
 import os
 
-import contextlib
 from typing import TYPE_CHECKING
 
 from tgparse.utils.logging import init_logging
@@ -45,6 +44,7 @@ async def parse_channel_history(
         docs.append(doc)
         message_repository.put_one(doc)
 
+    # WARN: overwrites a file!
     # message_repository.put_many(docs)
     logger.info(f'{len(docs)} messages retreived.')
 

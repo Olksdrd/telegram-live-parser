@@ -41,7 +41,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     parent_parser.add_argument(
         '-c',
         '--chats-repository',
-        help='Chats to repository backend',
+        help='Chats repository type (default: %(default)s)',
         default='cli',
         choices=['cli', 'json', 'mongodb'],
     )

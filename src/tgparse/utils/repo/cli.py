@@ -34,7 +34,7 @@ class CliRepository:
             flush=True,
             file=sys.stdout,
         )
-        return '-' * 40
+        return 'Processed 1 document.'
 
     def put_many(self, objects: list[Mapping]) -> str:
         docs = [{k: v for k, v in doc.items() if v} for doc in objects]
@@ -43,7 +43,7 @@ class CliRepository:
             flush=True,
             file=sys.stdout,
         )
-        return '-' * 40
+        return f'Processed {len(docs)} documents.'
 
     # def get(self, id: str) -> T:
     #     pass

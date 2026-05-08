@@ -38,6 +38,8 @@ class JsonRepository:
             return None
         with open(self.output_path, mode='r+') as file:
             try:
+                # NOTE: doesn't read file into memory
+                # See: https://stackoverflow.com/questions/18087397/append-list-of-python-dictionaries-to-a-file-without-loading-it  # noqa F502
                 file.seek(0, 2)
                 position = file.tell() - 1
                 file.seek(position)
@@ -47,6 +49,7 @@ class JsonRepository:
         return 'Saved 1 document.'
 
     def put_many(self, objects: list[Mapping]) -> str:
+        # WARN: overwrites the file!
         docs = [{k: v for k, v in doc.items() if v} for doc in objects]
         non_empty_docs = [doc for doc in docs if doc]
         if docs != non_empty_docs:
