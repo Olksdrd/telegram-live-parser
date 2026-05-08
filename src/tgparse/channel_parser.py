@@ -83,6 +83,9 @@ def start_history_parser(
     output_path: str,
 ) -> None:
     chats = get_chats_to_parse(repo_type=chats_repository, table_name=chats_path)
+    if not chats:
+        logger.error('No chats to parse, exiting...')
+        raise SystemExit(100)
     message_repository = get_message_repository(repo_type=message_repository, table_name=output_path)
     tg_client = get_telegram_client(session_type=session_backend)
 
