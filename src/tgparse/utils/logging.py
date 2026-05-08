@@ -17,14 +17,14 @@ class InfoFilter(logging.Filter):
         return record.levelno <= logging.INFO
 
 
-def generate_log_config() -> dict[str, Any]:
+def generate_log_config(min_log_level: str) -> dict[str, Any]:
     handlers_list = ['stdout', 'stderr', 'file']
 
     handlers_specification = {
         'stdout': {
             'class': 'logging.StreamHandler',
             'formatter': 'standard',
-            'level': 'INFO',
+            'level': min_log_level,
             'stream': 'ext://sys.stdout',
             'filters': ['info'],
         },
@@ -73,7 +73,7 @@ def generate_log_config() -> dict[str, Any]:
         'loggers': {
             'root': {
                 'handlers': ['queue_handler'],
-                'level': 'DEBUG',
+                'level': min_log_level,
                 'propagate': True,
             },
         },
@@ -81,24 +81,25 @@ def generate_log_config() -> dict[str, Any]:
     return log_config
 
 
-def filter_external_logs() -> None:
+def filter_external_logs(min_log_level_num: int) -> None:
+    # NOTE: {DEBUG = 10, INFO = 20, WARNING = 30, ERROR = 40, CRITICAL = 50}
     logger_blocklist = {
-        'asyncio': logging.INFO,
-        'telethon': logging.INFO,
+        'asyncio': max(logging.getLevelName('INFO'), min_log_level_num),
+        'telethon': max(logging.getLevelName('INFO'), min_log_level_num),
     }
 
     for module, min_log_level in logger_blocklist.items():
         logging.getLogger(module).setLevel(min_log_level)
 
 
-def init_logging() -> None:
+def init_logging(min_log_level: str = 'DEBUG') -> None:
     if not os.path.exists(LOGS_DIR):
         os.makedirs(LOGS_DIR)
 
-    log_config = generate_log_config()
+    log_config = generate_log_config(min_log_level)
     dictConfig(log_config)
 
-    filter_external_logs()
+    filter_external_logs(logging.getLevelName(min_log_level))
 
     # start a thread for a queue handler so it doesn't block useful work
     queue_handler = logging.getHandlerByName('queue_handler')
