@@ -55,7 +55,11 @@ class CliRepository:
         old_flags: int = fcntl.fcntl(fd, fcntl.F_GETFL)
         fcntl.fcntl(fd, fcntl.F_SETFL, old_flags | os.O_NONBLOCK)
         input_text = sys.stdin.buffer.raw.read()
-        input_obj = json.loads(input_text)
-        if type(input_obj) is not list:
-            input_obj = [input_obj]
+        try:
+            input_obj = json.loads(input_text)
+            if type(input_obj) is not list:
+                input_obj = [input_obj]
+        except TypeError:
+            logger.error('Failed to load JSON')
+            input_obj = []
         return input_obj
