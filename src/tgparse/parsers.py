@@ -1,8 +1,9 @@
 import asyncio
 import logging
-from collections.abc import Callable
+import os
 from typing import TYPE_CHECKING
 
+from telethon import TelegramClient
 from telethon.events import NewMessage
 
 from tgparse.utils.channel_helpers import (
@@ -10,9 +11,6 @@ from tgparse.utils.channel_helpers import (
     get_subscriptions_list,
 )
 from tgparse.utils.message_helpers import MessageBuilder
-from tgparse.utils.parser_helpers import (
-    get_telegram_client,
-)
 from tgparse.utils.repo.interface import (
     RepoSpec,
     get_chats_to_parse,
@@ -20,7 +18,8 @@ from tgparse.utils.repo.interface import (
 )
 
 if TYPE_CHECKING:
-    from telethon import TelegramClient
+    from collections.abc import Callable
+
     from telethon.hints import EntityLike
 
     from tgparse.utils.channel_helpers import TypeCompact
@@ -28,6 +27,32 @@ if TYPE_CHECKING:
 
 
 logger = logging.getLogger(__name__)
+
+
+def get_telegram_client(session_type: str = 'sqlite') -> TelegramClient:
+    session_name = os.getenv('SESSION_NAME')
+
+    if session_type == 'sqlite':
+        session = session_name
+    elif session_type == 'mongodb':
+        # NOTE: avoids installing unnecessary dependencies
+        from tgparse.utils.tg_helpers import get_telemongo_session  # noqa: PLC0415
+
+        session = get_telemongo_session(
+            db=session_name,
+            user=os.getenv('DB_USER'),
+            passwd=os.getenv('DB_PASSWD'),
+            ip=os.getenv('DB_IP'),
+            port=os.getenv('DB_PORT'),
+        )
+
+    logger.info('Initializing Telegram Client...')
+    return TelegramClient(
+        session=session,
+        api_id=os.getenv('API_ID'),
+        api_hash=os.getenv('API_HASH'),
+        catch_up=True,
+    )
 
 
 async def parse_channel_history(
