@@ -9,12 +9,18 @@ from tgparse.parsers import (
     start_parser,
 )
 from tgparse.utils.logging import init_logging
-from tgparse.utils.parser_helpers import RepoSpec
+from tgparse.utils.repo.interface import RepoSpec
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
 logger = logging.getLogger(__name__)
+
+PARSER_TYPES = {
+    'live': live_parser,
+    'history': history_parser,
+    'meta': chat_metadata_parser,
+}
 
 
 def get_log_level(num_of_v: int) -> str:
@@ -45,12 +51,20 @@ def main(argv: Sequence[str] | None = None) -> int:
         default='sqlite',
         choices=['sqlite', 'mongodb'],
     )
-    parent_arg_parser.add_argument(
+    input_group = parent_arg_parser.add_argument_group('Inputs')
+    input_group.add_argument(
         '-c',
         '--chats-repository',
         help='Chats repository type (default: %(default)s)',
         default='cli',
         choices=['cli', 'json', 'mongodb'],
+    )
+    input_group.add_argument(
+        '-i',
+        '--input',
+        help='Channels to parse',
+        type=str,
+        default='channels',
     )
     output_group = parent_arg_parser.add_argument_group('Outputs')
     output_group.add_argument(
@@ -76,42 +90,22 @@ def main(argv: Sequence[str] | None = None) -> int:
         dest='command',
     )
 
-    live_arg_parser = subparsers.add_parser(
+    live_arg_parser = subparsers.add_parser(  # noqa: F841
         'live',
         help='Near real-time parser',
         parents=[parent_arg_parser],
     )
-    live_arg_parser.add_argument(
-        '-i',
-        '--input',
-        help='Channels to parse',
-        type=str,
-        default='channels',
-    )
 
-    history_arg_parser = subparsers.add_parser(
+    history_arg_parser = subparsers.add_parser(  # noqa: F841
         'history',
         help='Parse message history',
         parents=[parent_arg_parser],
     )
-    history_arg_parser.add_argument(
-        '-i',
-        '--input',
-        help='Channels to parse',
-        type=str,
-        default='channels',
-    )
 
     channel_arg_parser = subparsers.add_parser(
-        'channel',
+        'meta',
         help='Generate channels list',
         parents=[parent_arg_parser],
-    )
-    channel_arg_parser.add_argument(
-        '-a',
-        '--additional-channels',
-        help='List of channel names to add to channel DB',
-        type=str,
     )
     channel_arg_parser.add_argument(
         '-s',
@@ -120,43 +114,19 @@ def main(argv: Sequence[str] | None = None) -> int:
         action='store_true',
         default=False,
     )
-    channel_arg_parser.add_argument(
-        '-l',
-        '--channels-list-repository',
-        help='Channels list repository type (default: %(default)s)',
-        default='cli',
-        choices=['cli', 'json', 'mongodb'],
-    )
 
     args: Namespace = arg_parser.parse_args(argv)
-    log_level = get_log_level(args.verbose)
-    init_logging(min_log_level=log_level)
+    if 'parse_subscriptions' not in args:
+        args.parse_subscriptions = False
+    init_logging(min_log_level=get_log_level(args.verbose))
 
-    match args.command:
-        case 'live':
-            start_parser(
-                parser=live_parser,
-                session_backend=args.backend,
-                input_repo_spec=RepoSpec(args.chats_repository, args.input),
-                output_repo_spec=RepoSpec(args.repository, args.output),
-            )
-        case 'history':
-            start_parser(
-                parser=history_parser,
-                session_backend=args.backend,
-                input_repo_spec=RepoSpec(args.chats_repository, args.input),
-                output_repo_spec=RepoSpec(args.repository, args.output),
-            )
-        case 'channel':
-            start_parser(
-                parser=chat_metadata_parser,
-                session_backend=args.backend,
-                input_repo_spec=RepoSpec(args.channels_list_repository, args.additional_channels),
-                output_repo_spec=RepoSpec(args.repository, args.output),
-                parse_subscriptions=args.parse_subscriptions,
-            )
-        case _:
-            pass
+    start_parser(
+        parser=PARSER_TYPES[args.command],
+        session_backend=args.backend,
+        input_repo_spec=RepoSpec(args.chats_repository, args.input),
+        output_repo_spec=RepoSpec(args.repository, args.output),
+        parse_subscriptions=args.parse_subscriptions,
+    )
 
     return 0
 
