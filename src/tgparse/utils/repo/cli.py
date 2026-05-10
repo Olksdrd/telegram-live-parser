@@ -38,11 +38,17 @@ class CliRepository:
 
     def put_many(self, data: list[Mapping]) -> str:
         docs = [{k: v for k, v in doc.items() if v} for doc in data]
-        print(
-            json.dumps(docs, default=str, ensure_ascii=False),
-            flush=True,
-            file=sys.stdout,
-        )
+        try:
+            print(
+                json.dumps(docs, default=str, ensure_ascii=False),
+                flush=True,
+                file=sys.stdout,
+            )
+        except BlockingIOError:
+            # BUG: blocks STDOUT (BlockingIOError): use echo [] | tgparse ...
+            os.set_blocking(sys.stdout.fileno(), True)
+            logger.error('Output is too large, consider redirecting STDOUT to a file: > file.json')
+            raise SystemExit(0)
         return f'Processed {len(docs)} documents.'
 
     # def get(self, id: str) -> T:
@@ -51,7 +57,6 @@ class CliRepository:
     def get_all(self) -> list[Mapping]:
         # NOTE: don't wait for input if it's not provided at the beginning
         # See: https://stackoverflow.com/questions/26263636/how-to-check-potentially-empty-stdin-without-waiting-for-input
-        # BUG: blocks STDOUT (BlockingIOError): use echo [] | tgparse ...
         fd: int = sys.stdin.fileno()
         old_flags: int = fcntl.fcntl(fd, fcntl.F_GETFL)
         fcntl.fcntl(fd, fcntl.F_SETFL, old_flags | os.O_NONBLOCK)

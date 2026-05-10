@@ -3,7 +3,7 @@ import os
 
 from tgparse.parsers import live_parser, start_parser
 from tgparse.utils.logging import init_logging
-from tgparse.utils.parser_helpers import RepoSpec
+from tgparse.utils.repo.interface import RepoSpec
 
 logger = logging.getLogger(__name__)
 

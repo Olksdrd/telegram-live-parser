@@ -11,10 +11,12 @@ from tgparse.utils.channel_helpers import (
 )
 from tgparse.utils.message_helpers import MessageBuilder
 from tgparse.utils.parser_helpers import (
+    get_telegram_client,
+)
+from tgparse.utils.repo.interface import (
     RepoSpec,
     get_chats_to_parse,
     get_repository,
-    get_telegram_client,
 )
 
 if TYPE_CHECKING:

@@ -1,6 +1,14 @@
 import importlib
+import logging
+import os
+from dataclasses import dataclass
 from enum import StrEnum
-from typing import Protocol
+from typing import TYPE_CHECKING, Protocol
+
+if TYPE_CHECKING:
+    from utils.channel_helpers import TypeCompact
+
+logger = logging.getLogger(__name__)
 
 
 class Repository[T](Protocol):
@@ -36,17 +44,26 @@ class Repository[T](Protocol):
         pass
 
 
+@dataclass(frozen=True)
+class RepoSpec:
+    repo_type: str
+    table_name: str | None
+    collection_name: str | None = None
+
+    def __post_init__(self) -> None:
+        if not self.collection_name:
+            object.__setattr__(self, 'collection_name', self.table_name)
+
+
 class RepositoryType(StrEnum):
+    CLI = 'cli'
+    JSON_STORAGE = 'json'
     MONGODB = 'mongo'
     DYNAMODB = 'dynamo'
-    JSON_STORAGE = 'json'
-    CLI = 'cli'
 
 
 def repository_factory(
-    repo_type: str,
-    table_name: str | None,
-    collection_name: str | None = None,
+    repo_spec: RepoSpec,
     user: str | None = None,
     passwd: str | None = None,
     ip: str | None = None,
@@ -54,18 +71,39 @@ def repository_factory(
     region: str | None = 'eu-central-1',
 ) -> Repository:
     # allows to avoid installing unnecessary dependencies
-    # ! repo_type should be one of the options from the Enum above
-    # load corresponding module from .utils/repo directory
-    repo_module = importlib.import_module(f'tgparse.utils.repo.{repo_type.lower()}')
+    repo_type = RepositoryType.lower(repo_spec.repo_type)
+    # load corresponding module from ../utils/repo directory
+    repo_module = importlib.import_module(f'tgparse.utils.repo.{repo_type}')
     # get repository class by name
-    repo = getattr(repo_module, f'{repo_type.capitalize()}Repository')
+    repo = getattr(repo_module, f'{RepositoryType.capitalize(repo_type)}Repository')
     # unused kwargs will be ignored
     return repo(
-        table_name=table_name,
-        collection_name=collection_name,
+        table_name=repo_spec.table_name,
+        collection_name=repo_spec.collection_name,
         user=user,
         passwd=passwd,
         ip=ip,
         port=port,
         region=region,
     )
+
+
+def get_repository(repo_spec: RepoSpec) -> Repository:
+    repository = repository_factory(
+        repo_spec=repo_spec,
+        user=os.getenv('DB_USER'),
+        passwd=os.getenv('DB_PASSWD'),
+        ip=os.getenv('DB_IP'),
+        port=os.getenv('DB_PORT'),
+    )
+    repository.connect()
+    return repository
+
+
+def get_chats_to_parse(repo_spec: RepoSpec) -> list[TypeCompact]:
+    logger.info('Fetching channels list...')
+    chats_repository = get_repository(repo_spec)
+    chats = chats_repository.get_all()
+    chats_repository.disconnect()
+    logger.info('Channels list loaded.')
+    return chats
