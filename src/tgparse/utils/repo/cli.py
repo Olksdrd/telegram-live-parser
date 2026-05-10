@@ -51,6 +51,7 @@ class CliRepository:
     def get_all(self) -> list[Mapping]:
         # NOTE: don't wait for input if it's not provided at the beginning
         # See: https://stackoverflow.com/questions/26263636/how-to-check-potentially-empty-stdin-without-waiting-for-input
+        # BUG: blocks STDOUT (BlockingIOError): use echo [] | tgparse ...
         fd: int = sys.stdin.fileno()
         old_flags: int = fcntl.fcntl(fd, fcntl.F_GETFL)
         fcntl.fcntl(fd, fcntl.F_SETFL, old_flags | os.O_NONBLOCK)
