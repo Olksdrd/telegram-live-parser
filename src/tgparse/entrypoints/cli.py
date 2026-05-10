@@ -107,7 +107,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     channel_parser.add_argument(
         '-a',
         '--additional-channels',
-        help='JSON list of channel names to add to channel DB',
+        help='List of channel names to add to channel DB',
         type=str,
     )
     channel_parser.add_argument(
@@ -115,6 +115,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         '--parse-subscriptions',
         help='Add all subscriptions to channel DB',
         action='store_true',
+        default=False,
+    )
+    channel_parser.add_argument(
+        '-l',
+        '--channels-list-repository',
+        help='Channels list repository type (default: %(default)s)',
+        default='cli',
+        choices=['cli', 'json', 'mongodb'],
     )
 
     args: Namespace = parser.parse_args(argv)
@@ -137,8 +145,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         case 'channel':
             start_chat_metadata_parser(
                 session_backend=args.backend,
-                chats_repo_spec=RepoSpec(args.chats_repository, args.output),
-                additional_channels=args.additional_channels,
+                input_repo_spec=RepoSpec(args.channels_list_repository, args.additional_channels),
+                output_repo_spec=RepoSpec(args.chats_repository, args.output),
                 parse_subscriptions=args.parse_subscriptions,
             )
         case _:

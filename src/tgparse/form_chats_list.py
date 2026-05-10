@@ -1,5 +1,4 @@
 import asyncio
-import json
 import logging
 import os
 from typing import TYPE_CHECKING
@@ -23,22 +22,14 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
-def load_channels_list(list_path: str) -> list[str]:
-    # TODO: make it work from STDIN
-    if not list_path:
-        return []
-    with open(list_path) as f:
-        non_subscribed_channels = json.load(f)
-    return list(set(non_subscribed_channels))
-
-
 async def chat_metadata_parser(
-    repository: Repository,
+    input_repository: Repository,
+    output_repository: Repository,
     client: TelegramClient,
-    list_path: str,
     parse_subscriptions: bool,
 ) -> None:
-    non_subscribed_channels = load_channels_list(list_path)
+    non_subscribed_channels = input_repository.get_all()
+    input_repository.disconnect()
 
     await client.start()
     logger.info('Telegram Client started.')
@@ -48,35 +39,37 @@ async def chat_metadata_parser(
         dialogs_to_parse = await get_subscriptions_list(client)
 
     dialogs_to_parse += await get_non_subscription_entities(client, non_subscribed_channels)
+    # TODO: remove duplicates
 
-    repository.put_many(dialogs_to_parse)
+    output_repository.put_many(dialogs_to_parse)
     logger.info(f'Info for {len([dialog for dialog in dialogs_to_parse if dialog])} chats saved.')
     await client.disconnect()
 
 
 def start_chat_metadata_parser(
     session_backend: str,
-    chats_repo_spec: RepoSpec,
-    additional_channels=str,
+    input_repo_spec: RepoSpec,
+    output_repo_spec: RepoSpec,
     parse_subscriptions=bool,
 ) -> None:
-    repository = get_repository(chats_repo_spec)
+    input_repository = get_repository(input_repo_spec)
+    output_repository = get_repository(output_repo_spec)
     tg_client = get_telegram_client(session_type=session_backend)
 
     # handle SIGINT without an error message from asyncio
     try:
         asyncio.run(
             chat_metadata_parser(
-                repository,
+                input_repository,
+                output_repository,
                 tg_client,
-                additional_channels,
                 parse_subscriptions,
             ),
         )
     except KeyboardInterrupt:
         pass  # TelegramClient connection autocloses on SIGINT
     finally:
-        repository.disconnect()
+        output_repository.disconnect()
 
 
 if __name__ == '__main__':
@@ -85,7 +78,7 @@ if __name__ == '__main__':
     parse_subcriptions = os.getenv('PARSE_SUBSCRIPTIONS') == 'yes'
     start_chat_metadata_parser(
         session_backend=os.getenv('SESSION_DB_TYPE'),
-        chats_repo_spec=RepoSpec(os.getenv('CHATS_REPO'), os.getenv('CHATS_TABLE')),
-        additional_channels=os.getenv('NON_SUBBED_CHANNELS_LIST'),
+        input_repo_spec=RepoSpec(os.getenv('json'), os.getenv('NON_SUBBED_CHANNELS_LIST')),
+        output_repo_spec=RepoSpec(os.getenv('CHATS_REPO'), os.getenv('CHATS_TABLE')),
         parse_subscriptions=parse_subcriptions,
     )
