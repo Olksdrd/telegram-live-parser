@@ -98,10 +98,10 @@ class CompactUser(TypedDict, total=False):
         )
 
 
-TypeCompact = CompactChannel | CompactChat | CompactUser
+type TypeCompactEntity = CompactChannel | CompactChat | CompactUser
 
 
-def get_compact_name(dialog: TypeCompact) -> str | None:
+def get_compact_name(dialog: TypeCompactEntity) -> str | None:
     name = dialog.get('name')
     if name is None:
         name = dialog.get('username')
@@ -128,7 +128,7 @@ def get_forward_id(fwd_header: MessageFwdHeader) -> int | None:
 async def get_channel_info(client: TelegramClient, peer: TypePeer) -> ChatFull | None:
     try:
         return await client(channels.GetFullChannelRequest(peer))
-    except ValueError, TypeError:
+    except (ValueError, TypeError):  # fmt: skip
         logger.warning(f'{peer} not found.')
         return None
     except ChannelPrivateError:
@@ -152,7 +152,7 @@ async def get_chat_info(client: TelegramClient, peer: TypePeer) -> ChatFull | No
         return None
 
 
-async def peer_info_request(client: TelegramClient, peer: TypePeer) -> TypeCompact | None:
+async def peer_info_request(client: TelegramClient, peer: TypePeer) -> TypeCompactEntity | None:
     if isinstance(peer, PeerChannel):
         res = await get_channel_info(client, peer)
         if res is not None:
@@ -170,8 +170,8 @@ async def peer_info_request(client: TelegramClient, peer: TypePeer) -> TypeCompa
 
 async def get_peer_by_id(
     client: TelegramClient,
-    dialog: TypeCompact,
-) -> TypeCompact | TypeInputPeer | None:
+    dialog: TypeCompactEntity,
+) -> TypeCompactEntity | TypeInputPeer | None:
     try:
         chat = await client.get_input_entity(dialog['id'])
     except ValueError:
@@ -183,7 +183,10 @@ async def get_peer_by_id(
 def cache_enitity_requests():
     cache = {}
 
-    async def query_entity_info(client: TelegramClient, name: EntitiesLike) -> TypeCompact | dict:
+    async def query_entity_info(
+        client: TelegramClient,
+        name: EntitiesLike,
+    ) -> TypeCompactEntity | dict:
         if not client.is_connected():
             await client.connect()
 
@@ -193,7 +196,7 @@ def cache_enitity_requests():
             logger.debug(f'Request for name {name!s}.')
             try:
                 entity = await client.get_entity(name)
-            except ValueError, UsernameInvalidError:
+            except (ValueError, UsernameInvalidError):  # fmt: skip
                 logger.warning(f'Entity {name} not found.')
                 entity = None
             except ChannelPrivateError:
@@ -216,7 +219,7 @@ query_entity_info = cache_enitity_requests()
 async def get_non_subscription_entities(
     client: TelegramClient,
     non_subscribed_entities: list[str],
-) -> list[TypeCompact]:
+) -> list[TypeCompactEntity]:
     logger.info('Adding additional entities...')
 
     dialogs_to_parse = []
@@ -277,7 +280,7 @@ def _(entity: Chat) -> CompactChat:
     )
 
 
-async def get_subscriptions_list(client: TelegramClient) -> list[TypeCompact]:
+async def get_subscriptions_list(client: TelegramClient) -> list[TypeCompactEntity]:
     logger.info('Iterating over subscriptions list...')
     dialogs = client.iter_dialogs()
 

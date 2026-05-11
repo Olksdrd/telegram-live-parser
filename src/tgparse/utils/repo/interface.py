@@ -6,7 +6,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:
-    from utils.channel_helpers import TypeCompact
+    from utils.channel_helpers import TypeCompactEntity
 
 logger = logging.getLogger(__name__)
 
@@ -100,7 +100,7 @@ def get_repository(repo_spec: RepoSpec) -> Repository:
     return repository
 
 
-def get_chats_to_parse(repo_spec: RepoSpec) -> list[TypeCompact]:
+def get_chats_to_parse(repo_spec: RepoSpec) -> list[TypeCompactEntity]:
     logger.info('Fetching channels list...')
     chats_repository = get_repository(repo_spec)
     chats = chats_repository.get_all()

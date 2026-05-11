@@ -22,7 +22,7 @@ if TYPE_CHECKING:
 
     from telethon.hints import EntityLike
 
-    from tgparse.utils.channel_helpers import TypeCompact
+    from tgparse.utils.channel_helpers import TypeCompactEntity
     from tgparse.utils.repo.interface import Repository
 
 
@@ -88,7 +88,7 @@ async def parse_channel_history(
 
 async def history_parser(
     tg_client: TelegramClient,
-    chats: list[TypeCompact],
+    chats: list[TypeCompactEntity],
     message_repository: Repository,
     **kwargs,
 ) -> None:
@@ -178,7 +178,7 @@ async def live_parser(
 
 
 def start_parser(
-    parser: Callable,
+    parser: Callable[..., None],
     session_backend: str,
     input_repo_spec: RepoSpec,
     output_repo_spec: RepoSpec,

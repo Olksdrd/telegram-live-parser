@@ -3,7 +3,7 @@ import os
 
 from telethon import TelegramClient
 from utils.channel_helpers import (
-    TypeCompact,
+    TypeCompactEntity,
     entitity_info_request,
     get_peer_id,
 )
@@ -14,7 +14,7 @@ async def amain(
     client: TelegramClient,
     repository: Repository,
     id: int,
-    seen_channels: dict[int, TypeCompact],
+    seen_channels: dict[int, TypeCompactEntity],
 ) -> None:
     try:
         chat = await client.get_input_entity(id)
