@@ -92,7 +92,7 @@ def filter_external_logs(min_log_level_num: int) -> None:
 
 
 def init_logging(min_log_level: str = 'DEBUG') -> None:
-    if not os.path.exists(LOGS_DIR):
+    if not os.path.exists(LOGS_DIR) and not CONTAINER_RUNTIME:
         os.makedirs(LOGS_DIR)
 
     log_config = generate_log_config(min_log_level)
