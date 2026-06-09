@@ -190,20 +190,18 @@ def start_parser(
     if not (chats or parse_subscriptions):
         logger.error('No chats to parse, exiting...')
         raise SystemExit(100)
-    output_repository = get_repository(output_repo_spec)
     tg_client = get_telegram_client(session_type=session_backend)
 
-    # handle SIGINT without an error message from asyncio
-    try:
-        asyncio.run(
-            parser(
-                tg_client,
-                chats,
-                output_repository,
-                parse_subscriptions=parse_subscriptions,
-            ),
-        )
-    except KeyboardInterrupt:
-        pass  # TelegramClient connection autocloses on SIGINT
-    finally:
-        output_repository.disconnect()
+    with get_repository(output_repo_spec) as output_repository:
+        # handle SIGINT without an error message from asyncio
+        try:
+            asyncio.run(
+                parser(
+                    tg_client,
+                    chats,
+                    output_repository,
+                    parse_subscriptions=parse_subscriptions,
+                ),
+            )
+        except KeyboardInterrupt:
+            pass  # TelegramClient connection autocloses on SIGINT

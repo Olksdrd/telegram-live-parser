@@ -1,6 +1,7 @@
 import importlib
 import logging
 import os
+from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import TYPE_CHECKING, Protocol
@@ -88,6 +89,7 @@ def repository_factory(
     )
 
 
+@contextmanager
 def get_repository(repo_spec: RepoSpec) -> Repository:
     repository = repository_factory(
         repo_spec=repo_spec,
@@ -97,13 +99,15 @@ def get_repository(repo_spec: RepoSpec) -> Repository:
         port=os.getenv('DB_PORT'),
     )
     repository.connect()
-    return repository
+    try:
+        yield repository
+    finally:
+        repository.disconnect()
 
 
 def get_chats_to_parse(repo_spec: RepoSpec) -> list[TypeCompactEntity]:
     logger.info('Fetching channels list...')
-    chats_repository = get_repository(repo_spec)
-    chats = chats_repository.get_all()
-    chats_repository.disconnect()
+    with get_repository(repo_spec) as chats_repository:
+        chats = chats_repository.get_all()
     logger.info('Channels list loaded.')
     return chats
