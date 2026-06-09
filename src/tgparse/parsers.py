@@ -113,6 +113,8 @@ async def history_parser(
         await parse_channel_history(tg_client, message_repository, builder, chat['id'])
         await asyncio.sleep(2)
 
+    await tg_client.disconnect()
+
 
 async def chat_metadata_parser(
     tg_client: TelegramClient,
