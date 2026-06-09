@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from functools import singledispatch
 from typing import TYPE_CHECKING, Self, TypedDict
@@ -226,6 +227,7 @@ async def get_non_subscription_entities(
     for entity_name in non_subscribed_entities:
         entity = await query_entity_info(client, name=entity_name)
         dialogs_to_parse.append(entity)
+        await asyncio.sleep(1)
 
     return dialogs_to_parse
 
